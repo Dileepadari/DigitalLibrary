@@ -1,0 +1,20 @@
+# Apache sends everything that is not a real file to the front controller.
+# The nginx equivalent is in DEVDOC.md.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Never serve a dotfile.
+    RewriteRule (^|/)\. - [F]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+Options -Indexes

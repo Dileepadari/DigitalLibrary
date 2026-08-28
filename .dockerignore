@@ -1,0 +1,16 @@
+.git
+.github
+vendor
+node_modules
+storage/library/*
+storage/quarantine/*
+storage/covers/*
+storage/cache/*
+storage/logs/*
+storage/backups/*
+.env
+*.env
+!.env.example
+.phpunit.cache
+.phpunit.result.cache
+docs/screenshots
