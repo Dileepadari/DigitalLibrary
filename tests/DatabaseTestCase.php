@@ -119,7 +119,7 @@ abstract class DatabaseTestCase extends TestCase
     /** Empties the test storage tree without removing the directories. */
     private function clearStorage(): void
     {
-        foreach (['library', 'quarantine'] as $directory) {
+        foreach (['library', 'quarantine', 'covers'] as $directory) {
             $path = $this->storageRoot . '/' . $directory;
 
             if (!is_dir($path)) {

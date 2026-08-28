@@ -17,6 +17,15 @@ final class Env
     /** @var array<string, string> */
     private static array $values = [];
 
+    /**
+     * Values set in code rather than read from the file. They win, and a later
+     * load() cannot undo them: the test suite sets STORAGE_ROOT before booting
+     * each kernel, and every boot re-reads .env.
+     *
+     * @var array<string, string>
+     */
+    private static array $overrides = [];
+
     private static bool $loaded = false;
 
     public static function load(string $path): void
@@ -60,7 +69,7 @@ final class Env
             self::load(BASE_PATH . '/.env');
         }
 
-        $value = self::$values[$key] ?? getenv($key);
+        $value = self::$overrides[$key] ?? self::$values[$key] ?? getenv($key);
 
         if ($value === false) {
             return $default;
@@ -75,10 +84,14 @@ final class Env
         };
     }
 
-    /** Test seam. */
+    /**
+     * Overrides one value for the life of the process. Used by the tests to
+     * point STORAGE_ROOT at a temporary directory; nothing in the application
+     * calls it.
+     */
     public static function set(string $key, string $value): void
     {
         self::$loaded = true;
-        self::$values[$key] = $value;
+        self::$overrides[$key] = $value;
     }
 }

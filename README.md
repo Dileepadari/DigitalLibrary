@@ -48,6 +48,7 @@ What works today:
   to decide on both
 - Upload a file: validated, hashed, deduplicated and held in quarantine until a
   librarian approves it, then hard linked into the library
+- A cover made from the first page of an uploaded PDF, when the record has none
 - A moderation queue with claims, canned reasons, a comment thread and a full
   event log, plus your own view of what you submitted and what came back
 - Downloads with range support, counted, and served only to people allowed them

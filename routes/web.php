@@ -20,6 +20,7 @@ use App\Controllers\Web\BookController;
 use App\Controllers\Web\BookFormController;
 use App\Controllers\Web\CategoryController;
 use App\Controllers\Web\CollectionController;
+use App\Controllers\Web\CoverController;
 use App\Controllers\Web\FileController;
 use App\Controllers\Web\HomeController;
 use App\Controllers\Web\ProfileController;
@@ -64,6 +65,10 @@ return static function (Router $router): void {
             ->name('books.status');
 
         $router->get('/books/{slug}', [BookController::class, 'show'])->name('book');
+
+        // Covers are catalogue metadata, so they are public for a published
+        // book, but they still come out of storage/ through a controller.
+        $router->get('/covers/{id:[0-9]+}', [CoverController::class, 'show'])->name('cover');
 
         $router->get('/categories', [CategoryController::class, 'index'])->name('categories');
         $router->post('/categories/propose', [TaxonomyController::class, 'storeCategory'])

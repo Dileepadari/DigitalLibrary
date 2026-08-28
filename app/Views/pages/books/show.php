@@ -21,7 +21,8 @@ $canEdit = $this->gate->allows('book.edit.any')
     <div class="book__head">
         <div class="book__cover cover cover--<?= (int) ($book->id % 6) ?>">
             <?php if ($book->coverPath !== null) : ?>
-                <img src="<?= $this->e($book->coverPath) ?>" alt="Cover of <?= $this->e($book->title) ?>">
+                <img src="<?= $this->url('cover', ['id' => $book->id]) ?>"
+                     alt="Cover of <?= $this->e($book->title) ?>">
             <?php else : ?>
                 <span><?= $this->e(mb_substr($book->title, 0, 1)) ?></span>
             <?php endif ?>

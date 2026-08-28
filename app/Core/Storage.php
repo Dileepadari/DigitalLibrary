@@ -116,6 +116,23 @@ final class Storage
         throw new \RuntimeException('Could not publish the file.');
     }
 
+    /**
+     * Copies a file the application produced (a generated cover, a backup) into
+     * the store. Unlike quarantine() the source is ours, not an upload.
+     */
+    public function put(string $relative, string $sourcePath): void
+    {
+        $target = $this->absolute($relative);
+
+        $this->ensureDirectory(dirname($target));
+
+        if (!copy($sourcePath, $target)) {
+            throw new \RuntimeException('Could not store ' . $relative);
+        }
+
+        chmod($target, 0640);
+    }
+
     public function delete(string $relative): bool
     {
         $path = $this->absolute($relative);

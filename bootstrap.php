@@ -45,6 +45,7 @@ use App\Services\Auth;
 use App\Services\BookRequestService;
 use App\Services\BookService;
 use App\Services\CollectionService;
+use App\Services\CoverGenerator;
 use App\Services\Gate;
 use App\Services\ModerationService;
 use App\Services\NotificationService;

@@ -8,7 +8,7 @@
     <a class="book-card__cover cover cover--<?= (int) ($book->id % 6) ?>"
        href="<?= $this->url('book', ['slug' => $book->slug]) ?>" aria-hidden="true" tabindex="-1">
         <?php if ($book->coverPath !== null) : ?>
-            <img src="<?= $this->e($book->coverPath) ?>" alt="">
+            <img src="<?= $this->url('cover', ['id' => $book->id]) ?>" alt="" loading="lazy">
         <?php else : ?>
             <span><?= $this->e(mb_substr($book->title, 0, 1)) ?></span>
         <?php endif ?>

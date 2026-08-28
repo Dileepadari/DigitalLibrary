@@ -201,6 +201,7 @@ Current routes:
 | POST | `/requests/{id}` | csrf, auth | `Web\RequestController@act` (claim, release, close, reopen, fulfil) |
 | POST | `/books/{slug}/files` | csrf, auth, `book.upload` | `Web\UploadController@store` |
 | GET | `/files/{id}` | csrf, auth, `book.download` | `Web\FileController@show` |
+| GET | `/covers/{id}` | csrf | `Web\CoverController@show` |
 | GET | `/me/submissions` | csrf, auth | `Web\SubmissionController@index` |
 | GET, POST | `/me/submissions/{id}` | csrf, auth | `Web\SubmissionController` |
 | GET | `/me/notifications` | csrf, auth | `Web\SubmissionController@notifications` |
@@ -474,11 +475,33 @@ the extension, not the declared type, not the size.
 9. **Metadata**: page count and up to 60,000 characters of text from
    `smalot/pdfparser`, best effort. A PDF with no text layer is flagged as a scan
    so the reviewer knows it will not be searchable.
-10. **Queue**: a `book_upload` request, unless the uploader has `book.publish`,
+10. **Cover**: if the record has no cover yet and the file is a PDF, page one is
+    rendered into `storage/covers/ab/cd/<sha>.jpg` and set on the book. A record
+    that already has a cover keeps it.
+11. **Queue**: a `book_upload` request, unless the uploader has `book.publish`,
     in which case the file is published immediately.
 
-Cover generation from page one needs Imagick, which is not a dependency this
-project wants; covers stay a manual field for now.
+### Covers
+
+PHP cannot rasterise a PDF on its own, so `CoverGenerator` uses whatever the host
+has, in this order: the Imagick extension, `pdftoppm` (poppler-utils), then
+Ghostscript. The result is scaled to 600px wide with GD and re-encoded as JPEG,
+so every cover comes out the same shape whichever tool made it.
+
+**A host with none of them simply gets no covers.** An upload must never fail
+because a picture could not be made of it, and the book page falls back to the
+tinted letter it used before. `covers:generate` says which renderer is in use and
+backfills the records that have none.
+
+The renderers are run with every argument escaped and, where `timeout` exists, a
+20 second limit: a malformed PDF can send a rasteriser into a very long loop. The
+only paths that reach the command line are ours (a hash under `storage/` and a
+temporary file), never a filename a user chose.
+
+Covers are served by `CoverController` at `/covers/{book}`, not linked directly:
+they live under `storage/` like everything else. They are public for a published
+book, since a cover is catalogue metadata rather than the book, and hidden for a
+record still in review except from its submitter and a reviewer.
 
 ### Storage layout
 
@@ -794,7 +817,7 @@ Nothing under `storage/` is inside the webroot. `config/storage.php` defines:
 |---|---|
 | `storage/library` | approved book files |
 | `storage/quarantine` | uploads awaiting review, deleted 7 days after a rejection |
-| `storage/covers` | generated cover images |
+| `storage/covers` | cover images, rendered from page one of a PDF |
 | `storage/cache` | rendered fragments and search artefacts |
 | `storage/logs` | one JSON object per line, per day |
 | `storage/backups` | database dumps written by the admin console |
@@ -851,6 +874,7 @@ php cli/console.php <command>
 | `catalogue:recount` | recalculate the category and tag counters |
 | `quarantine:prune` | delete rejected uploads older than `storage.quarantine_days` |
 | `storage:verify` | check every stored file exists and still hashes to its recorded SHA-256; exits 1 if not |
+| `covers:generate [n]` | render page one of PDFs whose record has no cover; names the renderer it found |
 | `key:generate` | write a new `APP_KEY` into `.env` |
 | `user:promote <email> <role>` | set a role: member, librarian or admin. The way back in if you lock yourself out |
 | `user:list` | the first 50 accounts with role, status and confirmation |
@@ -1094,6 +1118,16 @@ schema, `storage/` writable by the web user and outside the webroot, and
   `ob_flush()` as it goes, which empties a plain output buffer before the test
   can read it. `TestCase::bodyOf()` uses an output *handler* instead, which sees
   every chunk.
+- **`Env::set()` outlives `Env::load()`, and has to.** Every kernel boot re-reads
+  `.env`, so a value set in code would be undone on the next request unless it is
+  held as an override. This was a real bug: the test suite pointed STORAGE_ROOT
+  at a temporary directory, the next boot read the empty value out of `.env`, and
+  every test upload landed in the developer's own `storage/` tree instead.
+- **Covers depend on a tool that may not be there.** `CoverGenerator::available()`
+  is false on a host without Imagick, pdftoppm or Ghostscript, and the tests that
+  cover it skip themselves rather than failing. If covers stop appearing after a
+  deploy, run `covers:generate` and read the first line: it names the renderer,
+  or tells you there is none.
 - **A placeholder is not a listing.** A test asserting a page "does not contain
   UPSC Preparation" passed for the wrong reason once the create form gained
   `placeholder="UPSC Preparation"`. Assert on the link (`/collections/the-slug`)

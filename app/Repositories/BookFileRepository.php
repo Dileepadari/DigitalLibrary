@@ -112,6 +112,29 @@ final class BookFileRepository
         ], $rows);
     }
 
+    /**
+     * PDFs on records that have no cover yet, for the backfill command.
+     *
+     * @return list<array{book_id: int, storage_path: string, sha256: string}>
+     */
+    public function pdfsWithoutCover(int $limit = 200): array
+    {
+        $rows = $this->db->select(
+            "SELECT f.book_id, f.storage_path, f.sha256 FROM book_files f
+             INNER JOIN books b ON b.id = f.book_id
+             WHERE f.format = 'pdf' AND b.cover_path IS NULL AND b.deleted_at IS NULL
+             GROUP BY f.book_id
+             ORDER BY f.book_id LIMIT ?",
+            [max(1, min(1000, $limit))]
+        );
+
+        return array_map(static fn (array $row): array => [
+            'book_id'      => (int) $row['book_id'],
+            'storage_path' => (string) $row['storage_path'],
+            'sha256'       => (string) $row['sha256'],
+        ], $rows);
+    }
+
     /** @return list<array{id: int, storage_path: string, sha256: string, status: string}> */
     public function all(): array
     {

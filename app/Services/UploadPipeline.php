@@ -10,6 +10,7 @@ use App\Core\Storage;
 use App\Models\Book;
 use App\Models\User;
 use App\Repositories\BookFileRepository;
+use App\Repositories\BookRepository;
 use App\Support\UploadResult;
 use Smalot\PdfParser\Parser as PdfParser;
 
@@ -45,6 +46,8 @@ final class UploadPipeline
     public function __construct(
         private readonly Storage $storage,
         private readonly BookFileRepository $files,
+        private readonly BookRepository $books,
+        private readonly CoverGenerator $covers,
         private readonly Config $config,
         private readonly Logger $logger,
     ) {
@@ -136,6 +139,16 @@ final class UploadPipeline
 
         if ($metadata['text'] !== null) {
             $this->files->storeText($book->id, $metadata['text']);
+        }
+
+        // Most uploads arrive without a cover. The first page is a better
+        // stand-in than a coloured rectangle, and it costs one render.
+        if ($extension === 'pdf' && $book->coverPath === null) {
+            $cover = $this->covers->fromPdf($this->storage->absolute($relative), $sha256);
+
+            if ($cover !== null) {
+                $this->books->update($book->id, ['cover_path' => $cover]);
+            }
         }
 
         $file = $this->files->findById($id);

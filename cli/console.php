@@ -18,6 +18,7 @@ use App\Repositories\BookFileRepository;
 use App\Repositories\BookRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\LoginAttemptRepository;
+use App\Services\CoverGenerator;
 use App\Repositories\TagRepository;
 use App\Repositories\UserRepository;
 use App\Support\Role;
@@ -170,6 +171,42 @@ try {
             }
 
             out(sprintf('%d rejected file(s) older than %d days removed.', $removed, $days));
+
+            break;
+
+        case 'covers:generate':
+            $covers = $container->get(CoverGenerator::class);
+            $storage = $container->get(Storage::class);
+            $files = $container->get(BookFileRepository::class);
+            $books = $container->get(BookRepository::class);
+
+            if (!$covers->available()) {
+                fail(
+                    'No PDF renderer on this host. Install poppler-utils (pdftoppm), '
+                    . 'Ghostscript, or the Imagick extension.'
+                );
+            }
+
+            out('Renderer: ' . (string) $covers->renderer());
+            $made = 0;
+            $failed = 0;
+
+            foreach ($files->pdfsWithoutCover((int) ($arguments[0] ?? 200)) as $file) {
+                $path = $covers->fromPdf($storage->absolute($file['storage_path']), $file['sha256']);
+
+                if ($path === null) {
+                    $failed++;
+                    out('  could not render  book ' . $file['book_id']);
+
+                    continue;
+                }
+
+                $books->update($file['book_id'], ['cover_path' => $path]);
+                $made++;
+                out('  cover  book ' . $file['book_id'] . '  ' . $path);
+            }
+
+            out(sprintf('%d cover(s) made, %d could not be rendered.', $made, $failed));
 
             break;
 
@@ -375,6 +412,7 @@ try {
             out('  auth:prune         delete expired tokens and old login attempts');
             out('  quarantine:prune   delete rejected uploads past the grace window');
             out('  storage:verify     check every stored file is present and unchanged');
+            out('  covers:generate [n]  make covers from page one for PDFs that have none');
             out('  route:list         list registered routes');
             out('  storage:init       create the storage directories and check they are writable');
             out('  serve [host] [port]  run the PHP development server');
