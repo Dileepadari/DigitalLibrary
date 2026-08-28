@@ -23,7 +23,7 @@ final class BookRepository
     private const COLUMNS = 'b.id, b.title, b.subtitle, b.slug, b.published_year, b.edition, b.language,
         b.isbn10, b.isbn13, b.description, b.content_type, b.licence, b.licence_note, b.source_url,
         b.cover_path, b.page_count, b.status, b.added_by, b.published_at, b.view_count, b.download_count,
-        b.created_at, p.name AS publisher_name';
+        b.rating_average, b.rating_count, b.created_at, p.name AS publisher_name';
 
     public function __construct(private readonly Db $db)
     {
@@ -345,6 +345,7 @@ final class BookRepository
             'title'   => ['sql' => 'b.title ASC', 'bindings' => []],
             'oldest'  => ['sql' => 'b.created_at ASC', 'bindings' => []],
             'popular' => ['sql' => 'b.view_count DESC, b.id DESC', 'bindings' => []],
+            'rating'  => ['sql' => 'b.rating_average DESC, b.rating_count DESC', 'bindings' => []],
             'year'    => ['sql' => 'b.published_year DESC, b.title ASC', 'bindings' => []],
             default   => $query === ''
                 ? ['sql' => 'b.published_at DESC, b.id DESC', 'bindings' => []]

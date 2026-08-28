@@ -20,6 +20,7 @@ use App\Support\BookStatus;
 use App\Support\ModerationStatus;
 use App\Support\ModerationType;
 use App\Support\RejectionReason;
+use App\Support\ReputationAction;
 
 /**
  * The approval engine: one state machine for every kind of submission.
@@ -38,7 +39,6 @@ final class ModerationService
 {
     public const CLAIM_SECONDS = 1800;
 
-    private const REPUTATION_FOR_UPLOAD = 5;
 
     public function __construct(
         private readonly ModerationRepository $requests,
@@ -49,6 +49,7 @@ final class ModerationService
         private readonly UserRepository $users,
         private readonly AuditLogRepository $audit,
         private readonly NotificationService $notifications,
+        private readonly ReputationService $reputation,
         private readonly BookRequestService $bookRequests,
         private readonly CollectionService $collections,
         private readonly Storage $storage,
@@ -226,6 +227,14 @@ final class ModerationService
         ]);
 
         $this->requests->addEvent($request->id, $reviewer->id, $request->status->value, $next->value, $reason);
+
+        // Reviewing is work, and the queue only moves if someone does it.
+        $this->reputation->award(
+            $reviewer->id,
+            ReputationAction::ModerationDecided,
+            'moderation_request',
+            $request->id
+        );
 
         $this->audit->record(
             $reviewer->id,
@@ -430,7 +439,12 @@ final class ModerationService
 
         if ($file->uploadedBy !== null) {
             $this->users->addStorageUsed($file->uploadedBy, $file->sizeBytes);
-            $this->users->addReputation($file->uploadedBy, self::REPUTATION_FOR_UPLOAD);
+            $this->reputation->award(
+                $file->uploadedBy,
+                ReputationAction::UploadAccepted,
+                'book_file',
+                $file->id
+            );
         }
     }
 
@@ -468,8 +482,19 @@ final class ModerationService
 
     private function applyCollectionPublish(ModerationRequest $request, bool $approve): void
     {
-        if ($request->subjectId !== null) {
-            $this->collections->applyPublicationDecision($request->subjectId, $approve);
+        if ($request->subjectId === null) {
+            return;
+        }
+
+        $this->collections->applyPublicationDecision($request->subjectId, $approve);
+
+        if ($approve) {
+            $this->reputation->award(
+                $request->submitterId,
+                ReputationAction::CollectionPublished,
+                'collection',
+                $request->subjectId
+            );
         }
     }
 

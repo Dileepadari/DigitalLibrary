@@ -45,6 +45,8 @@ final class Book
         public readonly ?string $publishedAt,
         public readonly int $viewCount,
         public readonly int $downloadCount,
+        public readonly float $ratingAverage,
+        public readonly int $ratingCount,
         public readonly string $createdAt,
     ) {
     }
@@ -75,6 +77,8 @@ final class Book
             $row['published_at'] !== null ? (string) $row['published_at'] : null,
             (int) $row['view_count'],
             (int) $row['download_count'],
+            (float) ($row['rating_average'] ?? 0),
+            (int) ($row['rating_count'] ?? 0),
             (string) $row['created_at'],
         );
     }

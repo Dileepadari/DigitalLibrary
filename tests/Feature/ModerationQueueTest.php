@@ -208,10 +208,15 @@ final class ModerationQueueTest extends DatabaseTestCase
         $this->post('/librarian/queue/' . $id . '/claim');
         $this->post('/librarian/queue/' . $id . '/decide', ['decision' => 'approve']);
 
-        $row = $this->db->first('SELECT type, title FROM notifications WHERE user_id = ?', [$submitterId]);
+        // An approval can bring a badge with it, so look for the one we mean
+        // rather than whichever arrived first.
+        $row = $this->db->first(
+            "SELECT type, title FROM notifications WHERE user_id = ? AND type = 'moderation.approved'",
+            [$submitterId]
+        );
 
         $this->assertNotNull($row);
-        $this->assertSame('moderation.approved', $row['type']);
+        $this->assertStringContainsString('Approved', (string) $row['title']);
     }
 
     public function testRejectingNeedsAReason(): void

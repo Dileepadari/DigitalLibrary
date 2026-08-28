@@ -20,11 +20,13 @@ use App\Controllers\Web\BookController;
 use App\Controllers\Web\BookFormController;
 use App\Controllers\Web\CategoryController;
 use App\Controllers\Web\CollectionController;
+use App\Controllers\Web\ContributorController;
 use App\Controllers\Web\CoverController;
 use App\Controllers\Web\FileController;
 use App\Controllers\Web\HomeController;
 use App\Controllers\Web\ProfileController;
 use App\Controllers\Web\ReaderController;
+use App\Controllers\Web\ReviewController;
 use App\Controllers\Web\RequestController;
 use App\Controllers\Web\SettingsController;
 use App\Controllers\Web\SubmissionController;
@@ -86,6 +88,22 @@ return static function (Router $router): void {
         // Covers are catalogue metadata, so they are public for a published
         // book, but they still come out of storage/ through a controller.
         $router->get('/covers/{id:[0-9]+}', [CoverController::class, 'show'])->name('cover');
+
+        // Reviews and the contributor board.
+        $router->get('/contributors', [ContributorController::class, 'index'])->name('contributors');
+
+        $router->post('/books/{slug}/reviews', [ReviewController::class, 'store'])
+            ->middleware(Authenticate::class, Authorize::class . ':review.write')
+            ->name('reviews.store');
+        $router->post('/reviews/{id:[0-9]+}/delete', [ReviewController::class, 'destroy'])
+            ->middleware(Authenticate::class)
+            ->name('reviews.delete');
+        $router->post('/reviews/{id:[0-9]+}/helpful', [ReviewController::class, 'vote'])
+            ->middleware(Authenticate::class, Authorize::class . ':review.write')
+            ->name('reviews.helpful');
+        $router->post('/reviews/{id:[0-9]+}/moderate', [ReviewController::class, 'moderate'])
+            ->middleware(Authenticate::class, Authorize::class . ':review.moderate')
+            ->name('reviews.moderate');
 
         $router->get('/categories', [CategoryController::class, 'index'])->name('categories');
         $router->post('/categories/propose', [TaxonomyController::class, 'storeCategory'])

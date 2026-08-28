@@ -155,6 +155,16 @@ If you add a format, add it to `BookFile::isReadable()` and `readerKind()` and
 give it a branch in the script. Say what `position` means for it in DEVDOC: it is
 a free-form string and only the reader that wrote it can interpret it.
 
+## Anything that pays reputation
+
+Call `ReputationService::award()` with an action from `ReputationAction`; do not
+add points to the user row directly, or the events and the total drift apart and
+the badges stop making sense. Pass a subject type and id whenever the same thing
+could be awarded twice.
+
+A new badge is a migration inserting a row into `badges`: a name, the action to
+count and the threshold. No code changes.
+
 ## Adding a page that needs a session
 
 Put the route inside the `Authenticate::class` group in `routes/web.php`. Signed

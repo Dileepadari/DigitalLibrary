@@ -10,7 +10,10 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Session;
 use App\Core\View;
+use App\Repositories\CollectionRepository;
+use App\Repositories\ReviewRepository;
 use App\Repositories\UserRepository;
+use App\Services\ReputationService;
 
 final class ProfileController extends Controller
 {
@@ -18,6 +21,9 @@ final class ProfileController extends Controller
         View $view,
         Session $session,
         private readonly UserRepository $users,
+        private readonly ReviewRepository $reviews,
+        private readonly CollectionRepository $collections,
+        private readonly ReputationService $reputation,
     ) {
         parent::__construct($view, $session);
     }
@@ -30,6 +36,15 @@ final class ProfileController extends Controller
             throw HttpException::notFound('No member with that username.');
         }
 
-        return $this->render('pages/profile', ['profile' => $user]);
+        return $this->render('pages/profile', [
+            'profile'     => $user,
+            'badges'      => $this->reputation->badgesFor($user->id),
+            'tally'       => $this->reputation->tallyFor($user->id),
+            'reviews'     => $this->reviews->byUser($user->id, 5),
+            'collections' => array_values(array_filter(
+                $this->collections->forUser($user->id),
+                static fn ($collection): bool => $collection->isPublic()
+            )),
+        ]);
     }
 }

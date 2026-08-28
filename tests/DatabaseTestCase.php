@@ -32,6 +32,11 @@ abstract class DatabaseTestCase extends TestCase
 
     /** @var list<string> emptied before each test, children first */
     private const TABLES = [
+        'user_badges',
+        'badges',
+        'reputation_events',
+        'review_votes',
+        'reviews',
         'bookmarks',
         'reading_progress',
         'collection_followers',
@@ -63,7 +68,11 @@ abstract class DatabaseTestCase extends TestCase
     ];
 
     /** Migrations whose seed rows the tests rely on and the truncate removes. */
-    private const SEEDED = ['0007_create_categories_table', '0008_create_tags_table'];
+    private const SEEDED = [
+        '0007_create_categories_table',
+        '0008_create_tags_table',
+        '0016_create_reputation_tables',
+    ];
 
     protected Db $db;
 

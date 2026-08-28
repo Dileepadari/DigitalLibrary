@@ -13,6 +13,7 @@ use App\Core\View;
 use App\Repositories\BookRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\CollectionRepository;
+use App\Repositories\ReviewRepository;
 use App\Repositories\TagRepository;
 use App\Services\Auth;
 use App\Services\Gate;
@@ -28,6 +29,7 @@ final class BookController extends Controller
         private readonly CategoryRepository $categories,
         private readonly CollectionRepository $collections,
         private readonly TagRepository $tags,
+        private readonly ReviewRepository $reviews,
         private readonly Auth $auth,
         private readonly Gate $gate,
     ) {
@@ -73,6 +75,13 @@ final class BookController extends Controller
         return $this->render('pages/books/show', [
             'book'        => $book,
             'collections' => $user === null ? [] : $this->collections->forUser($user->id),
+            'reviews'     => $this->reviews->forBook(
+                $book->id,
+                $user?->id,
+                $this->gate->allows('review.moderate')
+            ),
+            'mine'        => $user === null ? null : $this->reviews->findByUserAndBook($user->id, $book->id),
+            'distribution' => $this->reviews->distribution($book->id),
             'related'     => array_values(array_filter(
                 $related,
                 static fn ($candidate): bool => $candidate->id !== $book->id

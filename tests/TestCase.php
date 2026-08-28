@@ -98,6 +98,15 @@ abstract class TestCase extends BaseTestCase
         return $captured;
     }
 
+    /**
+     * HTML with its whitespace collapsed, for asserting on a sentence that the
+     * template happens to have broken across lines and indentation.
+     */
+    protected function flatten(string $html): string
+    {
+        return trim((string) preg_replace('/\s+/', ' ', $html));
+    }
+
     protected function assertRedirectedTo(string $expected, Response $response): void
     {
         $this->assertContains($response->status(), [302, 303], 'Expected a redirect.');

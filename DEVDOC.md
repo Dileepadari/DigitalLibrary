@@ -5,7 +5,7 @@ data access, security model and setup. For what the app does from a user's point
 of view, see [README.md](./README.md). For the design of the features that are
 not built yet, see [PLAN.md](./PLAN.md).
 
-This file describes the code that exists today, at milestones 0 to 6.
+This file describes the code that exists today, at milestones 0 to 7.
 
 ## Table of contents
 
@@ -22,6 +22,7 @@ This file describes the code that exists today, at milestones 0 to 6.
 - [Book requests](#book-requests)
 - [Collections](#collections)
 - [Reading](#reading)
+- [Reviews and reputation](#reviews-and-reputation)
 - [Data access](#data-access)
 - [Data model](#data-model)
 - [Migrations](#migrations)
@@ -113,17 +114,19 @@ app/
                    BookRequest, Collection
   Repositories/    all SQL: User, Permission, AuthToken, LoginAttempt, AuditLog,
                    Settings, Book, Author, Publisher, Category, Tag, BookFile,
-                   Moderation, Notification, BookRequest, Collection, Reading
+                   Moderation, Notification, BookRequest, Collection, Reading,
+                   Review, Reputation, Badge
   Services/        Auth (who is signed in), Gate (what they may do),
                    AccountService (registration, verification, resets),
                    BookService (create and edit a record), TaxonomyService,
                    UploadPipeline (bytes in), ModerationService (the queue),
                    BookRequestService, CollectionService, CoverGenerator,
-                   NotificationService
+                   ReviewService, ReputationService, NotificationService
   Support/         not framework, not persistence: Role, UserStatus, Password,
                    AuthResult, ContentType, BookStatus, Licence, Slug,
                    ModerationStatus, ModerationType, RejectionReason,
-                   RequestStatus, Visibility, UploadResult, SystemStatus
+                   RequestStatus, Visibility, ReputationAction, UploadResult,
+                   SystemStatus
   Views/
     layouts/       the page shell
     partials/      header, footer, flash banners, field errors
@@ -205,6 +208,11 @@ Current routes:
 | POST | `/books/{slug}/files` | csrf, auth, `book.upload` | `Web\UploadController@store` |
 | GET | `/files/{id}` | csrf, auth, `book.download` | `Web\FileController@show` |
 | GET | `/covers/{id}` | csrf | `Web\CoverController@show` |
+| GET | `/contributors` | csrf | `Web\ContributorController@index` |
+| POST | `/books/{slug}/reviews` | csrf, auth, `review.write` | `Web\ReviewController@store` |
+| POST | `/reviews/{id}/delete` | csrf, auth | `Web\ReviewController@destroy` |
+| POST | `/reviews/{id}/helpful` | csrf, auth, `review.write` | `Web\ReviewController@vote` |
+| POST | `/reviews/{id}/moderate` | csrf, auth, `review.moderate` | `Web\ReviewController@moderate` |
 | GET | `/books/{slug}/read/{file}` | csrf, auth, `book.read` | `Web\ReaderController@show` |
 | POST | `/books/{slug}/read/{file}/progress` | csrf, auth, `book.read` | `Web\ReaderController@saveProgress` |
 | POST | `/books/{slug}/read/{file}/bookmarks` | csrf, auth, `book.read` | `Web\ReaderController@addBookmark` |
@@ -680,6 +688,59 @@ public, unless the reader is a reviewer or the person who uploaded it, and they
 check that the file actually belongs to the book in the address: a file id from
 one book cannot be opened under another book's slug.
 
+## Reviews and reputation
+
+### Reviews
+
+One review per person per book, enforced by a unique key rather than a check in
+the service. A review is a rating from one to five and, optionally, something to
+say; posting again edits the one you have.
+
+`books.rating_average` and `rating_count` are denormalised and recalculated by
+`ReviewRepository::refreshBookRating()` after anything that could change them,
+because every card in a listing shows them and none of them should need a join.
+
+**Hidden is not deleted.** A moderator with `review.moderate` can hide a review,
+with a reason; the person who wrote it still sees it on the page, and hears about
+it, so they know what happened rather than wondering where it went. A hidden
+review leaves the average: something nobody else can read should not be moving
+the number.
+
+You cannot mark your own review helpful.
+
+### Reputation
+
+`users.reputation` is a running total and `reputation_events` is what it is made
+of. Keeping the events is what lets someone ask why they have the points they
+have, and what gives badges something to count.
+
+Everything that pays goes through `ReputationService::award()`, and the scale
+lives in one enum:
+
+| Action | Points |
+|---|---|
+| `upload.accepted` | 5 |
+| `request.fulfilled` | 10 |
+| `review.written` | 2 |
+| `review.helpful` | 1 |
+| `collection.published` | 8 |
+| `moderation.decided` | 1 |
+
+**Naming a subject makes an award idempotent.** `award($user, UploadAccepted,
+'book_file', 12)` pays once however many times it is called, which matters
+because approval paths can be re-entered. An award with no subject (a helpful
+vote from a new person, say) counts every time, so the caller passes something
+that identifies the pair: `'review_vote:' . $voterId` with the review id.
+
+`revoke()` writes a negative event rather than deleting the original: taking a
+review back should undo the points without erasing the history.
+
+### Badges
+
+A badge is a row: a name, an action and a threshold. `awardBadgesFor()` counts
+the person's events of that action and awards anything they have passed, once,
+with a notification. Adding a badge is an INSERT in a migration, not code.
+
 ## Data access
 
 `App\Core\Db` wraps PDO with `ERRMODE_EXCEPTION`, `FETCH_ASSOC` and emulated
@@ -701,7 +762,7 @@ From M1, SQL lives in `app/Repositories` and nowhere else.
 
 ## Data model
 
-Thirty tables. Every timestamp is UTC (see the note in
+Thirty-five tables. Every timestamp is UTC (see the note in
 [Data access](#data-access)).
 
 **`users`** - `id`, `name`, `username` (unique, lowercase), `email` (unique,
@@ -824,6 +885,20 @@ string: page number, CFI or percent depending on the format), `percent`,
 `last_read_at`.
 
 **`bookmarks`** - `user_id`, `book_file_id`, `position`, `label`, `note`.
+
+**`reviews`** - (`book_id`, `user_id`) unique, `rating` 1 to 5, `body`, `status`
+enum(visible, hidden, removed), `hidden_reason`, `helpful_count`. `books` gained
+`rating_average` and `rating_count`.
+
+**`review_votes`** - (`review_id`, `user_id`): one helpful vote per person.
+
+**`reputation_events`** - `user_id`, `action`, `points` (negative for a revoke),
+`subject_type`, `subject_id`. The pair makes an award idempotent.
+
+**`badges`** - `key`, `name`, `description`, `action`, `threshold`. Seeded by its
+migration; ten to begin with.
+
+**`user_badges`** - (`user_id`, `badge_id`), `awarded_at`.
 
 `users` also gained `strikes`, incremented by a copyright rejection.
 
@@ -1020,6 +1095,13 @@ composer test
 Skipped tests are reported as skipped, not passed, so a run with no database
 cannot look like a green one.
 
+The database tests are integration tests: each one truncates the tables, re-seeds
+the taxonomy and badges, and every request inside it boots a fresh kernel with
+its own connection. The whole suite takes ten minutes or so on a laptop. That
+is the price of testing the real thing rather than mocks, and it is why the unit
+suite (`phpunit --testsuite Unit`, under two seconds) is worth running first
+while you work.
+
 Helpers do the setup: `makeUser()` writes an account straight to the table,
 `makeBook()` creates a record with its authors, categories and tags through the
 repositories, `makeRequest()` opens a book request with its requester's vote, and
@@ -1187,6 +1269,10 @@ schema, `storage/` writable by the web user and outside the webroot, and
   `ob_flush()` as it goes, which empties a plain output buffer before the test
   can read it. `TestCase::bodyOf()` uses an output *handler* instead, which sees
   every chunk.
+- **HTML wraps, so string assertions on a sentence break.** A template that
+  writes "from 3 reviews" across three indented lines does not contain the string
+  "from 3 reviews". `TestCase::flatten()` collapses the whitespace; use it rather
+  than asserting on a fragment that happens to fit on one line today.
 - **A `use` that silently does not exist.** `Foo::class` in a file without the
   import is the string `"Foo"`, and the container's error only appears at
   runtime. `RoutesTest` covers the route files; it happened again in

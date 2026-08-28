@@ -9,7 +9,7 @@ use App\Models\BookRequest;
 use App\Models\User;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\BookRequestRepository;
-use App\Repositories\UserRepository;
+use App\Support\ReputationAction;
 use App\Support\RequestStatus;
 
 /**
@@ -18,13 +18,11 @@ use App\Support\RequestStatus;
  */
 final class BookRequestService
 {
-    private const REPUTATION_FOR_FULFILMENT = 10;
-
     public function __construct(
         private readonly BookRequestRepository $requests,
-        private readonly UserRepository $users,
         private readonly AuditLogRepository $audit,
         private readonly NotificationService $notifications,
+        private readonly ReputationService $reputation,
         private readonly Gate $gate,
     ) {
     }
@@ -216,8 +214,14 @@ final class BookRequestService
             );
         }
 
+        // Answering your own request is its own reward.
         if ($actor !== null && $actor->id !== $request->requesterId) {
-            $this->users->addReputation($actor->id, self::REPUTATION_FOR_FULFILMENT);
+            $this->reputation->award(
+                $actor->id,
+                ReputationAction::RequestFulfilled,
+                'book_request',
+                $requestId
+            );
         }
 
         return true;

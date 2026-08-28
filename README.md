@@ -15,9 +15,10 @@ For the full design and the road to it, see **[PLAN.md](./PLAN.md)**.
 
 ## Where the project is
 
-Milestones 0 to 6 are complete: the application core, accounts with the three
+Milestones 0 to 7 are complete: the application core, accounts with the three
 roles and a real permission system, the catalogue, uploads with the review queue
-behind them, book requests, collections, and reading in the browser. A member can ask for a book, upvote what someone
+behind them, book requests, collections, reading in the browser, and the
+community layer of reviews, reputation and badges. A member can ask for a book, upvote what someone
 else asked for, add a book and attach a file; a librarian reviews it; approving
 it publishes the file and tells everyone who wanted it. Files can be read in the
 browser or downloaded.
@@ -31,8 +32,8 @@ browser or downloaded.
 | M4 Requests | book requests, votes, claiming, fulfilment linked to uploads | done |
 | M5 Collections | the deep folder tree, sharing, forking and following | done |
 | M6 Reading | PDF and EPUB readers, reading progress, bookmarks | done |
-| M7 Community | reviews, ratings, reputation, badges | next |
-| M8 Admin | settings, audit log, storage dashboard, analytics, takedowns | planned |
+| M7 Community | reviews, ratings, reputation, badges, the contributor board | done |
+| M8 Admin | settings, audit log viewer, storage dashboard, analytics, takedowns | next |
 | M9 Polish | full text search, public API, OPDS and RSS, Hindi, accessibility | planned |
 
 What works today:
@@ -54,6 +55,10 @@ What works today:
 - Downloads with range support, counted, and served only to people allowed them
 - Read PDFs, EPUBs and text in the browser, with the page you were on remembered
   per person and bookmarks you can name
+- Rate and review a book, mark someone else's review helpful, and see the rating
+  on every listing. Librarians can hide a review, with a reason the author sees
+- Reputation for work the library keeps, badges for doing it repeatedly, and a
+  contributor board at `/contributors`
 - Book requests: ask for what is missing, upvote what others asked for, claim one
   to work on, and answer one by adding the book. Everyone who voted is told when
   it arrives

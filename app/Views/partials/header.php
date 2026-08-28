@@ -21,6 +21,7 @@ $unread = $this->notifications->unreadCount($user?->id);
             <a href="<?= $this->url('tags') ?>">Tags</a>
             <a href="<?= $this->url('requests') ?>">Requests</a>
             <a href="<?= $this->url('collections') ?>">Collections</a>
+            <a href="<?= $this->url('contributors') ?>">People</a>
 
             <?php if ($user !== null) : ?>
                 <?php if ($this->gate->allows('book.upload')) : ?>

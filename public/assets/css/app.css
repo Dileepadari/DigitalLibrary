@@ -1285,3 +1285,108 @@ input[type="file"] {
 .reader__aside h2 {
     margin-top: 0;
 }
+
+/* Reviews, ratings and badges (M7) */
+
+.rating-stars {
+    color: var(--warn);
+    letter-spacing: 0.05em;
+}
+
+.book__rating {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+}
+
+.rating-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.rating-summary__score {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.rating-summary__score strong {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.rating-bars {
+    flex: 1 1 14rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 22rem;
+}
+
+.rating-bars li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.rating-bars__label {
+    width: 1ch;
+    color: var(--text-muted);
+}
+
+.rating-bars__track {
+    flex: 1;
+    height: 0.45rem;
+    background: var(--surface-alt);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.rating-bars__fill {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+}
+
+.review {
+    padding: 0.85rem 0;
+    border-top: 1px solid var(--border);
+}
+
+.review--hidden {
+    opacity: 0.65;
+}
+
+.review__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.35rem;
+}
+
+.review__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.4rem 0 0;
+}
+
+.review p:last-child {
+    margin-bottom: 0;
+}
+
+.badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 1rem 0 0;
+}

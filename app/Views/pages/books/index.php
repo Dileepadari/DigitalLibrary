@@ -39,6 +39,7 @@ $with = static fn (string $key, string $value): string
                     'title'   => 'Title',
                     'year'    => 'Year',
                     'popular' => 'Most read',
+                    'rating'  => 'Best rated',
                 ] as $value => $label) : ?>
                     <option value="<?= $this->e($value) ?>"
                         <?= ($filters['sort'] ?? '') === $value ? 'selected' : '' ?>>

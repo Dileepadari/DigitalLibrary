@@ -4,6 +4,9 @@
  * @var App\Models\Book $book
  * @var list<App\Models\Book> $related
  * @var list<App\Models\Collection> $collections
+ * @var list<array<string, mixed>> $reviews
+ * @var array<string, mixed>|null $mine
+ * @var array<int, int> $distribution
  */
 
 use App\Support\BookStatus;
@@ -40,6 +43,20 @@ $canEdit = $this->gate->allows('book.edit.any')
             <?php endif ?>
 
             <p class="book__byline"><?= $this->e($book->byline()) ?></p>
+
+            <?php if ($book->ratingCount > 0) : ?>
+                <p class="book__rating">
+                    <span class="rating-stars" aria-hidden="true"><?=
+                        str_repeat('&#9733;', (int) round($book->ratingAverage))
+                        . str_repeat('&#9734;', 5 - (int) round($book->ratingAverage))
+                    ?></span>
+                    <a href="#reviews">
+                        <?= $this->e(number_format($book->ratingAverage, 1)) ?>
+                        from <?= (int) $book->ratingCount ?>
+                        review<?= $book->ratingCount === 1 ? '' : 's' ?>
+                    </a>
+                </p>
+            <?php endif ?>
 
             <?php if ($book->tags !== []) : ?>
                 <p class="book__tags">
@@ -202,6 +219,13 @@ $canEdit = $this->gate->allows('book.edit.any')
             </ul>
         </section>
     <?php endif ?>
+
+    <?php $this->include('partials/reviews', [
+        'book'         => $book,
+        'reviews'      => $reviews,
+        'mine'         => $mine,
+        'distribution' => $distribution,
+    ]) ?>
 
     <?php if ($related !== []) : ?>
         <section>
