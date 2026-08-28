@@ -24,6 +24,7 @@ use App\Controllers\Web\CoverController;
 use App\Controllers\Web\FileController;
 use App\Controllers\Web\HomeController;
 use App\Controllers\Web\ProfileController;
+use App\Controllers\Web\ReaderController;
 use App\Controllers\Web\RequestController;
 use App\Controllers\Web\SettingsController;
 use App\Controllers\Web\SubmissionController;
@@ -53,6 +54,22 @@ return static function (Router $router): void {
             $router->get('/books/{slug}/edit', [BookFormController::class, 'edit'])->name('books.edit');
             $router->post('/books/{slug}/edit', [BookFormController::class, 'update'])->name('books.update');
             $router->post('/books/{slug}/files', [UploadController::class, 'store'])->name('books.files');
+        });
+
+        // Reading in the browser. The reader posts back to the two endpoints
+        // under it, with the CSRF token in a header.
+        $router->group([
+            'middleware' => [Authenticate::class, Authorize::class . ':book.read'],
+        ], static function (Router $router): void {
+            $router->get('/books/{slug}/read/{file:[0-9]+}', [ReaderController::class, 'show'])->name('read');
+            $router->post('/books/{slug}/read/{file:[0-9]+}/progress', [ReaderController::class, 'saveProgress'])
+                ->name('read.progress');
+            $router->post('/books/{slug}/read/{file:[0-9]+}/bookmarks', [ReaderController::class, 'addBookmark'])
+                ->name('read.bookmark');
+            $router->post(
+                '/books/{slug}/read/{file:[0-9]+}/bookmarks/{bookmark:[0-9]+}/delete',
+                [ReaderController::class, 'deleteBookmark']
+            )->name('read.bookmark.delete');
         });
 
         // The only way bytes leave storage/.

@@ -384,6 +384,9 @@ try {
             $config = $container->get(Config::class);
             $host = $arguments[0] ?? '127.0.0.1';
             $port = $arguments[1] ?? '8000';
+            // The reader loads a module, a worker and the file at once; a
+            // single process server would serialise them into a stall.
+            putenv('PHP_CLI_SERVER_WORKERS=4');
             out('Serving ' . $config->get('app.name') . ' on http://' . $host . ':' . $port);
             passthru(sprintf(
                 '%s -S %s:%s -t %s',

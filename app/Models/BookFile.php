@@ -45,6 +45,25 @@ final class BookFile
         );
     }
 
+    /**
+     * Formats the in-browser reader can open. Everything else is a download:
+     * pretending otherwise would just be a blank page with a spinner.
+     */
+    public function isReadable(): bool
+    {
+        return in_array($this->format, ['pdf', 'epub', 'txt'], true) && $this->isPublished();
+    }
+
+    public function readerKind(): string
+    {
+        return match ($this->format) {
+            'pdf'   => 'pdf',
+            'epub'  => 'epub',
+            'txt'   => 'text',
+            default => 'none',
+        };
+    }
+
     public function isPublished(): bool
     {
         return $this->status === 'published';

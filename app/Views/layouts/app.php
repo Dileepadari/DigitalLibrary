@@ -24,5 +24,7 @@
 </main>
 
 <?php $this->include('partials/footer') ?>
+
+<?= $this->slot('scripts') ?>
 </body>
 </html>

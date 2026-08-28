@@ -13,6 +13,12 @@
     RewriteRule ^ index.php [QSA,L]
 </IfModule>
 
+# PDF.js ships as an ES module. Apache does not know .mjs out of the box, and a
+# module served as text/plain is refused by the browser.
+<IfModule mod_mime.c>
+    AddType application/javascript .mjs
+</IfModule>
+
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
 </IfModule>

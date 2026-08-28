@@ -1,6 +1,6 @@
 # Digital Library - Project Plan
 
-Status: v1, M0 to M5 built
+Status: v1, M0 to M6 built
 Date: 2026-08-28
 Owner: ADK DEV
 Companion docs: `README.md` (users), `DEVDOC.md` (contributors). Both are written after this plan is agreed.
@@ -286,7 +286,7 @@ Tables, grouped. Every table has `id BIGINT UNSIGNED AUTO_INCREMENT`, `created_a
 
 **Engagement**
 `reviews`, `review_votes`, `ratings`
-`reading_progress` (user_id, book_file_id, position JSON, percent, last_read_at), `bookmarks`, `highlights`
+`reading_progress` (user_id, book_file_id, position, percent, last_read_at), `bookmarks` (with a note)
 `shelf_items` (user_id, book_id, shelf enum)
 `notifications`, `notification_preferences`
 `badges`, `user_badges`, `reputation_events`
@@ -398,7 +398,7 @@ Each milestone ends with the app runnable and the docs updated in the same commi
 | M3 Upload and moderation | upload pipeline, quarantine, moderation engine, librarian queue, review screen, notifications | done |
 | M4 Requests | book requests, votes, claim, fulfilment linked to uploads | done |
 | M5 Collections | tree model, personal shelves, public proposal and approval, curation, fork and follow | done |
-| M6 Reading | PDF and EPUB readers, progress, bookmarks, highlights, downloads with range support | 1.5 weeks |
+| M6 Reading | PDF and EPUB readers, progress, bookmarks, downloads with range support | done |
 | M7 Community | reviews, ratings, reputation, badges, leaderboard, profiles | 1 week |
 | M8 Admin and ops | settings, feature flags, audit log, storage dashboard, analytics, takedowns, backups | 1.5 weeks |
 | M9 Polish | full text search, API, OPDS and RSS, i18n Hindi, accessibility pass, performance, docs and screenshots | 2 weeks |
@@ -448,6 +448,14 @@ Settled at M1: the first account registered on an empty install becomes a
 verified admin, because an install with no admin can never promote anyone. Email
 delivery is PHPMailer over SMTP when `MAIL_DRIVER=smtp`, PHP's `mail()` when
 `mail`, and the log file otherwise.
+
+Settled at M6: PDF.js, epub.js and JSZip are committed under
+`public/assets/vendor` rather than pulled from a CDN. The Content-Security-Policy
+allows scripts from this origin only and the project has no build step, so
+vendoring is the only way to have a reader at all; the alternative was weakening
+the CSP for everyone to save two megabytes in the repository. Highlights are
+folded into bookmarks: a bookmark carries a note, and a separate highlight table
+would need text ranges the PDF reader cannot give us anyway.
 
 Settled at M5: a collection is published whole rather than folder by folder, so
 the reviewer sees the tree they are approving. Visibility and review state are

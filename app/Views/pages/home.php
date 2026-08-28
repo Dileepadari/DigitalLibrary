@@ -7,6 +7,7 @@
  * @var int $bookCount
  * @var list<App\Models\Book> $recentBooks
  * @var list<App\Models\BookRequest> $mostWanted
+ * @var list<array<string, mixed>> $reading
  */
 $this->layout('layouts/app');
 $this->section('title');
@@ -22,10 +23,10 @@ $check = static fn (bool $ok): string => $ok
     <h1><?= $this->e($siteName) ?></h1>
     <p class="hero__tagline"><?= $this->e($this->config('app.tagline')) ?></p>
     <p class="hero__note">
-        Milestones 0 to 4 are in place: the application core, accounts with roles
+        Milestones 0 to 6 are in place: the application core, accounts with roles
         and permissions, the catalogue, uploads with the review queue behind them,
-        and book requests. Collections arrive in M5. See PLAN.md for the full
-        sequence.
+        book requests, collections, and reading in the browser. See PLAN.md for
+        what comes next.
     </p>
 
     <?php if (!$this->auth->check()) : ?>
@@ -108,6 +109,26 @@ $check = static fn (bool $ok): string => $ok
     </dl>
 </section>
 
+<?php if ($reading !== []) : ?>
+    <section aria-labelledby="reading-heading">
+        <h2 id="reading-heading">Carry on reading</h2>
+
+        <ul class="collection-list">
+            <?php foreach ($reading as $entry) : ?>
+                <li>
+                    <a href="/books/<?= $this->e((string) $entry['slug']) ?>/read/<?= (int) $entry['book_file_id'] ?>">
+                        <?= $this->e((string) $entry['title']) ?>
+                    </a>
+                    <span class="status-item__detail">
+                        <?= (int) $entry['percent'] ?>% through
+                        &middot; <?= $this->e(strtoupper((string) $entry['format'])) ?>
+                    </span>
+                </li>
+            <?php endforeach ?>
+        </ul>
+    </section>
+<?php endif ?>
+
 <?php if ($mostWanted !== []) : ?>
     <section aria-labelledby="wanted-heading">
         <h2 id="wanted-heading">Most wanted</h2>
@@ -141,8 +162,8 @@ $check = static fn (bool $ok): string => $ok
 <section class="panel" aria-labelledby="next-heading">
     <h2 id="next-heading">What lands next</h2>
     <ol class="roadmap">
-        <li><strong>M5 Collections</strong> - the deep folder tree and its approval flow</li>
-        <li><strong>M6 Reading</strong> - the PDF and EPUB readers, progress and bookmarks</li>
         <li><strong>M7 Community</strong> - reviews, ratings, reputation and badges</li>
+        <li><strong>M8 Admin</strong> - settings, the audit log viewer, storage and analytics</li>
+        <li><strong>M9 Polish</strong> - full text search, the public API, OPDS, Hindi, accessibility</li>
     </ol>
 </section>

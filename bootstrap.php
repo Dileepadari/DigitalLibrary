@@ -34,6 +34,7 @@ use App\Repositories\CategoryRepository;
 use App\Repositories\CollectionRepository;
 use App\Repositories\ModerationRepository;
 use App\Repositories\NotificationRepository;
+use App\Repositories\ReadingRepository;
 use App\Repositories\LoginAttemptRepository;
 use App\Repositories\PermissionRepository;
 use App\Repositories\PublisherRepository;

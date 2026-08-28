@@ -144,6 +144,17 @@ do not re-derive ownership in a controller.
 A private collection must 404 rather than 403: whether someone has a shelf called
 "Job Applications" is not information the site should give away.
 
+## Touching the reader
+
+`public/assets/js/reader.js` is the only file that talks to PDF.js or epub.js,
+and it reads everything it needs from data attributes on `[data-reader]`. Keep it
+that way: the CSP has no `unsafe-inline`, so a value cannot be passed by
+generating a script tag.
+
+If you add a format, add it to `BookFile::isReadable()` and `readerKind()` and
+give it a branch in the script. Say what `position` means for it in DEVDOC: it is
+a free-form string and only the reader that wrote it can interpret it.
+
 ## Adding a page that needs a session
 
 Put the route inside the `Authenticate::class` group in `routes/web.php`. Signed

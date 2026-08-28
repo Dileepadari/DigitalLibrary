@@ -13,6 +13,9 @@ use App\Repositories\BookRepository;
 use App\Repositories\BookRequestRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\TagRepository;
+use App\Repositories\UserRepository;
+use App\Services\ModerationService;
+use App\Services\UploadPipeline;
 use App\Support\Slug;
 
 /**
@@ -29,6 +32,8 @@ abstract class DatabaseTestCase extends TestCase
 
     /** @var list<string> emptied before each test, children first */
     private const TABLES = [
+        'bookmarks',
+        'reading_progress',
         'collection_followers',
         'collection_maintainers',
         'collection_items',
@@ -345,6 +350,42 @@ abstract class DatabaseTestCase extends TestCase
         }
 
         return $id;
+    }
+
+    /**
+     * A published book with a published file on it, ready to be read.
+     *
+     * @return array{book_id: int, file_id: int, slug: string, uploader: int}
+     */
+    protected function makeReadableBook(string $title = 'A Readable Book', string $format = 'pdf'): array
+    {
+        $librarian = $this->makeUser('libby', 'librarian');
+        $container = $this->kernel()->container();
+
+        $bookId = $this->makeBook($title, ['added_by' => $librarian['id']]);
+        $book = $container->get(BookRepository::class)->findById($bookId);
+        $user = $container->get(UserRepository::class)->findById($librarian['id']);
+
+        $this->assertNotNull($book);
+        $this->assertNotNull($user);
+
+        $upload = $format === 'pdf'
+            ? $this->makeUpload('book.pdf', $this->pdfBytes($title))
+            : $this->makeUpload('book.txt', 'The text of ' . $title . ".\n");
+
+        $result = $container->get(UploadPipeline::class)->receive($upload, $book, $user);
+
+        $this->assertTrue($result->ok, (string) $result->error);
+        $this->assertNotNull($result->file);
+
+        $container->get(ModerationService::class)->submitUpload($book, $result->file, $user, true);
+
+        return [
+            'book_id'  => $bookId,
+            'file_id'  => $result->file->id,
+            'slug'     => $book->slug,
+            'uploader' => $librarian['id'],
+        ];
     }
 
     /**

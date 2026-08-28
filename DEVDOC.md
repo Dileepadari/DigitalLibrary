@@ -5,7 +5,7 @@ data access, security model and setup. For what the app does from a user's point
 of view, see [README.md](./README.md). For the design of the features that are
 not built yet, see [PLAN.md](./PLAN.md).
 
-This file describes the code that exists today, at milestones 0 to 5.
+This file describes the code that exists today, at milestones 0 to 6.
 
 ## Table of contents
 
@@ -21,6 +21,7 @@ This file describes the code that exists today, at milestones 0 to 5.
 - [Uploads and moderation](#uploads-and-moderation)
 - [Book requests](#book-requests)
 - [Collections](#collections)
+- [Reading](#reading)
 - [Data access](#data-access)
 - [Data model](#data-model)
 - [Migrations](#migrations)
@@ -98,7 +99,8 @@ app/
                    HttpException
   Controllers/
     Web/           returns HTML (home, profile, settings, books, categories,
-                   tags, requests, collections, uploads, downloads, submissions)
+                   tags, requests, collections, uploads, downloads, covers,
+                   the reader, submissions)
     Auth/          register, login, password reset, email verification
     Librarian/     the moderation queue, the catalogue list, the taxonomy screen
     Admin/         the admin area (users)
@@ -111,12 +113,13 @@ app/
                    BookRequest, Collection
   Repositories/    all SQL: User, Permission, AuthToken, LoginAttempt, AuditLog,
                    Settings, Book, Author, Publisher, Category, Tag, BookFile,
-                   Moderation, Notification, BookRequest, Collection
+                   Moderation, Notification, BookRequest, Collection, Reading
   Services/        Auth (who is signed in), Gate (what they may do),
                    AccountService (registration, verification, resets),
                    BookService (create and edit a record), TaxonomyService,
                    UploadPipeline (bytes in), ModerationService (the queue),
-                   BookRequestService, CollectionService, NotificationService
+                   BookRequestService, CollectionService, CoverGenerator,
+                   NotificationService
   Support/         not framework, not persistence: Role, UserStatus, Password,
                    AuthResult, ContentType, BookStatus, Licence, Slug,
                    ModerationStatus, ModerationType, RejectionReason,
@@ -202,6 +205,10 @@ Current routes:
 | POST | `/books/{slug}/files` | csrf, auth, `book.upload` | `Web\UploadController@store` |
 | GET | `/files/{id}` | csrf, auth, `book.download` | `Web\FileController@show` |
 | GET | `/covers/{id}` | csrf | `Web\CoverController@show` |
+| GET | `/books/{slug}/read/{file}` | csrf, auth, `book.read` | `Web\ReaderController@show` |
+| POST | `/books/{slug}/read/{file}/progress` | csrf, auth, `book.read` | `Web\ReaderController@saveProgress` |
+| POST | `/books/{slug}/read/{file}/bookmarks` | csrf, auth, `book.read` | `Web\ReaderController@addBookmark` |
+| POST | `/books/{slug}/read/{file}/bookmarks/{bookmark}/delete` | csrf, auth, `book.read` | `Web\ReaderController@deleteBookmark` |
 | GET | `/me/submissions` | csrf, auth | `Web\SubmissionController@index` |
 | GET, POST | `/me/submissions/{id}` | csrf, auth | `Web\SubmissionController` |
 | GET | `/me/notifications` | csrf, auth | `Web\SubmissionController@notifications` |
@@ -625,6 +632,54 @@ before it. **Following** notifies everyone but the person who added the book.
 Smart nodes (a saved search mounted as a folder) are in PLAN.md but not built;
 there are no columns for them yet.
 
+## Reading
+
+The reader is one page (`pages/books/read.php`) and one script
+(`public/assets/js/reader.js`). Everything the script needs is on the
+`[data-reader]` element: which kind of file, where to fetch it, where the reader
+got to last time, and a CSRF token. No server-rendered JavaScript, because the
+CSP forbids inline script.
+
+### The libraries are vendored
+
+`public/assets/vendor` holds PDF.js, epub.js and JSZip, committed to the
+repository. The CSP allows `script-src 'self'` and the project has no build
+step, so a CDN is not an option and neither is npm at deploy time. Two megabytes
+in git is the price of not weakening the CSP for everyone. `vendor/README.md`
+records the versions and licences; updating one is replacing a file.
+
+### What each format does
+
+| Format | Renderer | `position` means |
+|---|---|---|
+| PDF | PDF.js into a canvas, one page at a time | the page number |
+| EPUB | epub.js into an iframe | an EPUB CFI |
+| TXT | fetched and put in a `<pre>` | percent scrolled |
+
+Anything else (MOBI, DJVU, CBZ, audio, video) is a download; the reader page says
+so rather than showing a spinner over a blank area. `BookFile::isReadable()` is
+the one place that decides.
+
+`position` is a string in the database for that reason: only the reader that
+wrote it has to understand it, and `percent` is the part the rest of the app uses
+(the "carry on reading" list on the home page, for instance).
+
+### Progress and bookmarks
+
+Progress is saved by `fetch` to `/books/{slug}/read/{file}/progress` with the
+CSRF token in an `X-CSRF-Token` header, at most once every four seconds and again
+on `pagehide` with `keepalive`. A page turn is not a request.
+
+`reading_progress` is unique on (user, file) and written with an upsert, so
+reading a book twice does not accumulate rows. Bookmarks belong to one person:
+the delete is `WHERE id = ? AND user_id = ?`, so knowing another person's
+bookmark id does not help.
+
+The reader endpoints refuse a file that is not published on a book that is not
+public, unless the reader is a reviewer or the person who uploaded it, and they
+check that the file actually belongs to the book in the address: a file id from
+one book cannot be opened under another book's slug.
+
 ## Data access
 
 `App\Core\Db` wraps PDO with `ERRMODE_EXCEPTION`, `FETCH_ASSOC` and emulated
@@ -646,7 +701,7 @@ From M1, SQL lives in `app/Repositories` and nowhere else.
 
 ## Data model
 
-Twenty-eight tables. Every timestamp is UTC (see the note in
+Thirty tables. Every timestamp is UTC (see the note in
 [Data access](#data-access)).
 
 **`users`** - `id`, `name`, `username` (unique, lowercase), `email` (unique,
@@ -763,6 +818,12 @@ key cascades, so deleting a folder takes its subtree.
 against the root, not against each folder.
 
 **`collection_followers`** - (`collection_id`, `user_id`), also against the root.
+
+**`reading_progress`** - (`user_id`, `book_file_id`) unique, `position` (a
+string: page number, CFI or percent depending on the format), `percent`,
+`last_read_at`.
+
+**`bookmarks`** - `user_id`, `book_file_id`, `position`, `label`, `note`.
 
 `users` also gained `strikes`, incremented by a copyright rejection.
 
@@ -1059,6 +1120,9 @@ server {
         include fastcgi_params;
     }
 
+    # PDF.js is an ES module and a module served as text/plain is refused.
+    types { application/javascript mjs; }
+
     location ~ /\. { deny all; }
     client_max_body_size 256M;
 }
@@ -1090,9 +1154,14 @@ schema, `storage/` writable by the web user and outside the webroot, and
 - **Sessions do nothing on the CLI.** `Session::start()` returns early outside a
   web SAPI and backs everything with a plain `$_SESSION` array, so flash messages
   do not survive between console runs and tests start with an empty session.
-- **The dev server is single threaded.** `console.php serve` uses PHP's built-in
-  server: a request that makes an HTTP call back into the same server deadlocks.
-  Use Docker or a real web server for anything beyond page rendering.
+- **The dev server needs workers for the reader.** PHP's built-in server handles
+  one request at a time, and the reader asks for a module, a worker and the file
+  at once. `console.php serve` sets `PHP_CLI_SERVER_WORKERS=4` for that reason;
+  starting `php -S` by hand without it will look like the reader hanging.
+- **`.mjs` has to be served as JavaScript.** Apache and nginx do not know the
+  extension by default, and a module served as `text/plain` is refused by the
+  browser with a message that does not mention MIME types. The shipped
+  `.htaccess` and the nginx snippet above both set it.
 - **JSON settings keep their quotes.** `settings.value` is a JSON column, so the
   string setting `site.name` is stored as `"Digital Library"` including the
   quotes, and reading it means `json_decode`. Forgetting that gets you a site
@@ -1118,6 +1187,11 @@ schema, `storage/` writable by the web user and outside the webroot, and
   `ob_flush()` as it goes, which empties a plain output buffer before the test
   can read it. `TestCase::bodyOf()` uses an output *handler* instead, which sees
   every chunk.
+- **A `use` that silently does not exist.** `Foo::class` in a file without the
+  import is the string `"Foo"`, and the container's error only appears at
+  runtime. `RoutesTest` covers the route files; it happened again in
+  `DatabaseTestCase` during M6, where a helper resolved `Tests\UserRepository`.
+  If a container cannot resolve something obvious, check the imports first.
 - **`Env::set()` outlives `Env::load()`, and has to.** Every kernel boot re-reads
   `.env`, so a value set in code would be undone on the next request unless it is
   held as an override. This was a real bug: the test suite pointed STORAGE_ROOT

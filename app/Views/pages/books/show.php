@@ -55,7 +55,13 @@ $canEdit = $this->gate->allows('book.edit.any')
                 <?php if ($book->hasFiles()) : ?>
                     <?php foreach ($book->publishedFiles() as $file) : ?>
                         <?php if ($this->gate->allows('book.download')) : ?>
-                            <a class="button" href="<?= $this->url('file', ['id' => $file->id]) ?>">
+                            <?php if ($file->isReadable() && $this->gate->allows('book.read')) : ?>
+                                <a class="button"
+                                   href="<?= $this->url('read', ['slug' => $book->slug, 'file' => $file->id]) ?>">
+                                    Read <?= $this->e(strtoupper($file->format)) ?>
+                                </a>
+                            <?php endif ?>
+                            <a class="button button--quiet" href="<?= $this->url('file', ['id' => $file->id]) ?>">
                                 Download <?= $this->e(strtoupper($file->format)) ?>
                                 &middot; <?= $this->e($file->humanSize()) ?>
                             </a>
