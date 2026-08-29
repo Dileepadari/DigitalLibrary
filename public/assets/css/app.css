@@ -1,0 +1,2657 @@
+/*
+ * Design tokens live on :root. Dark mode redefines only the tokens, twice: once
+ * for the system preference and once for an explicit data-theme="dark", so the
+ * toggle wins in both directions.
+ */
+:root {
+    --accent: #47266b;
+    --accent-soft: rgba(71, 38, 107, 0.14);
+    --accent-contrast: #ffffff;
+
+    --bg: #f7f6f9;
+    --surface: #ffffff;
+    --surface-alt: #f1eef5;
+    --border: #e0dae8;
+    --text: #1c1a22;
+    --text-muted: #5d5768;
+
+    --ok: #1c7a4a;
+    --ok-soft: rgba(28, 122, 74, 0.12);
+    --warn: #8a5a00;
+    --warn-soft: rgba(138, 90, 0, 0.14);
+    --danger: #a32020;
+    --danger-soft: rgba(163, 32, 32, 0.12);
+
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 18px;
+    --shadow-sm: 0 1px 2px rgba(28, 26, 34, 0.07);
+    --shadow: 0 1px 2px rgba(28, 26, 34, 0.06), 0 8px 24px rgba(28, 26, 34, 0.05);
+    --shadow-lg: 0 2px 4px rgba(28, 26, 34, 0.06), 0 18px 42px rgba(28, 26, 34, 0.12);
+    --ring: 0 0 0 3px var(--accent-soft);
+    --speed: 140ms;
+    --ease: cubic-bezier(0.2, 0, 0.2, 1);
+    --container: 74rem;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --measure: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --accent: #b79ce8;
+        --accent-soft: rgba(183, 156, 232, 0.16);
+        --accent-contrast: #17141d;
+
+        --bg: #131118;
+        --surface: #1b1822;
+        --surface-alt: #221e2c;
+        --border: #322c3f;
+        --text: #ece9f1;
+        --text-muted: #a49cb4;
+
+        --ok: #6bd39b;
+        --ok-soft: rgba(107, 211, 155, 0.14);
+        --warn: #e8b866;
+        --warn-soft: rgba(232, 184, 102, 0.16);
+        --danger: #f08a8a;
+        --danger-soft: rgba(240, 138, 138, 0.16);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.32);
+        --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.45), 0 20px 48px rgba(0, 0, 0, 0.45);
+    }
+}
+
+:root[data-theme="dark"] {
+    --accent: #b79ce8;
+    --accent-soft: rgba(183, 156, 232, 0.16);
+    --accent-contrast: #17141d;
+
+    --bg: #131118;
+    --surface: #1b1822;
+    --surface-alt: #221e2c;
+    --border: #322c3f;
+    --text: #ece9f1;
+    --text-muted: #a49cb4;
+
+    --ok: #6bd39b;
+    --ok-soft: rgba(107, 211, 155, 0.14);
+    --warn: #e8b866;
+    --warn-soft: rgba(232, 184, 102, 0.16);
+    --danger: #f08a8a;
+    --danger-soft: rgba(240, 138, 138, 0.16);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.32);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.45), 0 20px 48px rgba(0, 0, 0, 0.45);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* The footer sits at the bottom of a short page instead of halfway up it. */
+body > main {
+    flex: 1 0 auto;
+    padding-bottom: 3rem;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    line-height: 1.25;
+    letter-spacing: -0.011em;
+    text-wrap: balance;
+}
+
+p {
+    text-wrap: pretty;
+}
+
+a {
+    color: var(--accent);
+    text-underline-offset: 0.16em;
+    text-decoration-thickness: from-font;
+    transition: color var(--speed) var(--ease);
+}
+
+a:hover {
+    color: var(--text);
+}
+
+img {
+    max-width: 100%;
+}
+
+hr {
+    height: 1px;
+    margin: 2rem 0;
+    border: 0;
+    background: var(--border);
+}
+
+/* Reachable by a screen reader, invisible to everyone else. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+code,
+pre {
+    font-family: var(--mono);
+    font-size: 0.9em;
+}
+
+/* A path or a command must never be the reason a page scrolls sideways. */
+code {
+    overflow-wrap: anywhere;
+}
+
+pre {
+    overflow-x: auto;
+    padding: 0.75rem;
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+}
+
+.container {
+    width: min(100% - 2rem, var(--container));
+    margin-inline: auto;
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+}
+
+.skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+    z-index: 10;
+    padding: 0.5rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* A page that is only a message: an error, or the closed sign. */
+.page-message {
+    max-width: 34rem;
+    margin: 5rem auto;
+    text-align: center;
+}
+
+.page-message__code {
+    margin: 0;
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+}
+
+.page-message h1 {
+    margin: 0.75rem 0 0.5rem;
+    font-size: 1.5rem;
+}
+
+.page-message__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+/*
+ * Link policy, so no link looks like an accident. Two kinds only:
+ *
+ *  - prose links (a sentence, a footer line, a review, an empty state) keep the
+ *    accent colour and an underline, which is the browser default made
+ *    deliberate. That is the global `a` rule above.
+ *  - structural links (navigation, breadcrumbs, trees, cards, table rows,
+ *    lists) drop the underline and take the text colour, and pick both up on
+ *    hover. They are furniture, and a wall of underlines reads as noise.
+ *
+ * Anything not listed here falls back to the prose style, so a new link is
+ * always styled, never bare.
+ */
+.breadcrumb a,
+.breadcrumb-list a,
+.collection-list a,
+.item-list a,
+.decision-row a,
+.timeline a,
+.request-row a,
+.table a,
+.badge-row a,
+.figures a,
+.section-head a,
+.spark-row a,
+.menu__panel a,
+.subnav a,
+.pagination a,
+.book-card a,
+.collection-card a,
+.cover {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.breadcrumb a:hover,
+.breadcrumb-list a:hover,
+.collection-list a:hover,
+.item-list a:hover,
+.decision-row a:hover,
+.timeline a:hover,
+.request-row a:hover,
+.table a:hover,
+.badge-row a:hover,
+.figures a:hover,
+.section-head a:hover,
+.spark-row a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+/* A card is one target: the title carries the link and lights up with it. */
+.book-card:hover .book-card__title a,
+.collection-card:hover h3 a {
+    color: var(--accent);
+}
+
+/* Header */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(10px);
+    border-bottom: 1px solid var(--border);
+}
+
+@supports not (backdrop-filter: blur(2px)) {
+    .site-header {
+        background: var(--surface);
+    }
+}
+
+.site-header__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    min-height: 64px;
+    padding-block: 0.5rem;
+}
+
+.brand {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.6rem;
+    color: inherit;
+    text-decoration: none;
+    font-weight: 620;
+    letter-spacing: -0.01em;
+}
+
+.brand:hover {
+    color: var(--text);
+}
+
+@media (max-width: 30rem) {
+    .brand__name {
+        display: none;
+    }
+}
+
+.brand__badge {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+}
+
+/*
+ * One purple-on-transparent file for both themes: brightness(0) flattens every
+ * opaque pixel to black and keeps the alpha shape, invert(1) makes it white.
+ */
+.logo-mono {
+    display: block;
+    filter: brightness(0);
+    opacity: 0.86;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .logo-mono {
+        filter: brightness(0) invert(1);
+    }
+}
+
+:root[data-theme="dark"] .logo-mono {
+    filter: brightness(0) invert(1);
+}
+
+/*
+ * The primary nav is six links. On a narrow screen it becomes one scrollable
+ * strip rather than a hamburger: everything stays one tap away, and there is no
+ * menu that can trap focus.
+ */
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.15rem;
+    min-width: 0;
+    font-size: 0.94rem;
+}
+
+.site-nav a {
+    padding: 0.4rem 0.62rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.site-nav a:hover {
+    color: var(--text);
+    background: var(--surface-alt);
+}
+
+.site-nav a[aria-current="page"] {
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.site-search {
+    flex: 0 1 16rem;
+    margin-left: auto;
+}
+
+.site-search input {
+    width: 100%;
+    padding: 0.42rem 0.75rem;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+
+.site-search input:focus {
+    outline: 0;
+    background: var(--surface);
+    border-color: var(--accent);
+    box-shadow: var(--ring);
+}
+
+/*
+ * The header search is the first thing to go: below this width the row would
+ * be brand, six links, a box and the account controls, and something has to
+ * wrap. Browse has its own search field.
+ */
+@media (max-width: 76rem) {
+    .site-search {
+        display: none;
+    }
+
+    /* With the search gone, the account controls take over pushing right. */
+    .site-actions {
+        margin-left: auto;
+    }
+}
+
+/*
+ * The overflow menu sits at the right hand end of the bar and carries every
+ * destination except Browse. Below 52rem it carries Browse too, and the bar
+ * shows nothing but the brand: one button, everything behind it.
+ */
+.menu__primary {
+    display: none;
+}
+
+@media (max-width: 52rem) {
+    .site-nav {
+        display: none;
+    }
+
+    .menu__primary {
+        display: grid;
+        margin-bottom: 0.35rem;
+        padding-bottom: 0.35rem;
+        border-bottom: 1px solid var(--border);
+    }
+}
+
+.menu__panel a[aria-current="page"] {
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+/*
+ * The search and the account controls form one group on the right; the auto
+ * margin sits on the search, so the two never drift apart.
+ */
+.site-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.site-actions__link {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.94rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+}
+
+.site-actions__link:hover {
+    color: var(--text);
+    background: var(--surface-alt);
+}
+
+/* Drawn icons: one stroke weight, the current colour, no icon font. */
+.icon {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/*
+ * The theme button shows the theme it would switch to: a moon while the page is
+ * light, a sun while it is dark. CSS follows both the stored choice and the
+ * system preference, so the script never touches the markup.
+ */
+.icon--sun {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .icon--sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .icon--moon {
+        display: none;
+    }
+}
+
+:root[data-theme="dark"] .icon--sun {
+    display: block;
+}
+
+:root[data-theme="dark"] .icon--moon {
+    display: none;
+}
+
+:root[data-theme="light"] .icon--sun {
+    display: none;
+}
+
+:root[data-theme="light"] .icon--moon {
+    display: block;
+}
+
+.icon-button {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.icon-button:hover {
+    color: var(--text);
+    background: var(--surface-alt);
+    border-color: var(--border);
+}
+
+.icon-button[aria-current="page"] {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+/* The unread count sits on the corner of the bell, not under it. */
+.icon-button .badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    margin: 0;
+}
+
+/* The account menu: a <details>, so it works before the script loads. */
+.menu {
+    position: relative;
+}
+
+.menu__trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.2rem 0.5rem 0.2rem 0.2rem;
+    font-size: 0.9rem;
+    list-style: none;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background var(--speed) var(--ease), border-color var(--speed) var(--ease);
+}
+
+.menu__trigger::-webkit-details-marker {
+    display: none;
+}
+
+.menu__trigger:hover,
+.menu[open] .menu__trigger {
+    background: var(--surface-alt);
+    border-color: var(--border);
+}
+
+.menu__name {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 40rem) {
+    .menu__name {
+        display: none;
+    }
+}
+
+.menu__panel {
+    position: absolute;
+    right: 0;
+    z-index: 30;
+    display: grid;
+    min-width: 12.5rem;
+    margin-top: 0.5rem;
+    padding: 0.35rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+}
+
+.menu__panel a,
+.menu__signout {
+    padding: 0.45rem 0.6rem;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--text);
+    text-align: left;
+    text-decoration: none;
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.menu__panel a:hover,
+.menu__signout:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.menu__form {
+    display: grid;
+    margin: 0.35rem 0 0;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Content */
+
+/* The hero and a small shelf of covers, so the page is not all one side. */
+.hero-band {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3rem;
+    align-items: center;
+}
+
+.hero__shelf {
+    display: flex;
+    padding-right: 1.5rem;
+}
+
+@media (max-width: 62rem) {
+    .hero-band {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hero__shelf {
+        display: none;
+    }
+}
+
+.hero__shelf-item {
+    width: 8.5rem;
+    box-shadow: var(--shadow-lg);
+    transition: transform var(--speed) var(--ease);
+}
+
+.hero__shelf-item:nth-child(1) {
+    transform: rotate(-4deg);
+}
+
+.hero__shelf-item:nth-child(2) {
+    margin-left: -2.5rem;
+    transform: translateY(-0.75rem);
+}
+
+.hero__shelf-item:nth-child(3) {
+    margin-left: -2.5rem;
+    transform: rotate(4deg);
+}
+
+.hero {
+    padding: 3.5rem 0 1.5rem;
+    max-width: var(--measure);
+}
+
+.hero h1 {
+    margin: 0 0 0.35rem;
+    font-size: clamp(2.1rem, 5vw, 3.1rem);
+    letter-spacing: -0.03em;
+}
+
+.hero__tagline {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.hero__note {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.panel {
+    margin: 1.5rem 0;
+    padding: 1.35rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.panel h2 {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+}
+
+.panel--debug pre {
+    max-height: 24rem;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1rem;
+    margin: 0;
+}
+
+.status-item {
+    padding: 0.85rem 1rem;
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+}
+
+.status-item dt {
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.status-item dd {
+    margin: 0;
+}
+
+.status-item__detail {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}
+
+.pill {
+    display: inline-block;
+    padding: 0.1rem 0.55rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 999px;
+}
+
+.pill--ok {
+    color: var(--ok);
+    background: var(--ok-soft);
+}
+
+.pill--warn {
+    color: var(--warn);
+    background: var(--warn-soft);
+}
+
+.roadmap {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: var(--text-muted);
+}
+
+.roadmap strong {
+    color: var(--text);
+}
+
+/* Footer */
+
+.site-footer {
+    flex: 0 0 auto;
+    margin-top: auto;
+    padding: 1.75rem 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.site-footer a {
+    color: var(--text-muted);
+    text-decoration: underline;
+}
+
+.site-footer a:hover {
+    color: var(--accent);
+}
+
+.site-footer__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) repeat(auto-fit, minmax(8rem, 1fr));
+    gap: 1.5rem 2rem;
+    align-items: start;
+}
+
+@media (max-width: 40rem) {
+    .site-footer__inner {
+        grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    }
+}
+
+.site-footer p {
+    margin: 0;
+}
+
+.site-footer__brand {
+    display: grid;
+    gap: 0.5rem;
+    max-width: 22rem;
+}
+
+.site-footer__brand .brand {
+    color: var(--text);
+}
+
+.site-footer__column {
+    display: grid;
+    gap: 0.35rem;
+    align-content: start;
+}
+
+.site-footer__column h2 {
+    margin: 0 0 0.15rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text);
+}
+
+.site-footer__column a {
+    text-decoration: none;
+}
+
+.site-footer__column a:hover {
+    text-decoration: underline;
+}
+
+/* The line under everything: the library's name and what it is. */
+.site-footer__base {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    justify-content: space-between;
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+}
+
+/* Forms, tables and the rest of the account surface (M1) */
+
+.form-page {
+    max-width: 27rem;
+    margin: 3rem auto;
+    padding: 1.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+}
+
+/* A wide form (add a book, settings) keeps the page width and drops the card. */
+.form-page--wide {
+    max-width: none;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+}
+
+.form-page h1 {
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+}
+
+.form-page__aside {
+    margin-top: 1.25rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.stack {
+    display: grid;
+    gap: 1rem;
+}
+
+/*
+ * A grid stretches its children, which turns every submit button into a full
+ * width bar. Wide forms want a button the size of its label; the narrow auth
+ * card is the one place where full width reads as deliberate.
+ */
+.stack > button,
+.stack > .button,
+.stack > .decision-row,
+.stack-wide > button,
+.stack-wide > .button {
+    justify-self: start;
+}
+
+.form-page:not(.form-page--wide) .stack > button,
+.form-page:not(.form-page--wide) .stack > .button {
+    justify-self: stretch;
+}
+
+.stack-wide {
+    display: grid;
+    gap: 1.25rem;
+    margin: 2rem 0;
+}
+
+.stack-wide > h1 {
+    margin: 0;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.field input,
+.field select,
+.field textarea,
+.filter-bar input,
+.filter-bar select,
+.inline-form input,
+.inline-form select {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+
+.field input::placeholder,
+.filter-bar input::placeholder,
+.site-search input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.85;
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover,
+.filter-bar input:hover,
+.filter-bar select:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.filter-bar input:focus,
+.filter-bar select:focus,
+.inline-form input:focus,
+.inline-form select:focus {
+    outline: 0;
+    border-color: var(--accent);
+    box-shadow: var(--ring);
+}
+
+/* A rejected field says so in colour as well as in words. */
+.field input[aria-invalid="true"],
+.field select[aria-invalid="true"],
+.field textarea[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+.field input[aria-invalid="true"]:focus,
+.field textarea[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px var(--danger-soft);
+}
+
+/*
+ * A select is as wide as its longest option unless told otherwise, and one long
+ * category path was enough to stretch a whole page sideways.
+ */
+.field select,
+.filter-bar select,
+.inline-form select {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.field select {
+    appearance: none;
+    padding-right: 2rem;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 1.05rem) 55%, calc(100% - 0.75rem) 55%;
+    background-size: 0.32rem 0.32rem, 0.32rem 0.32rem;
+    background-repeat: no-repeat;
+}
+
+.field textarea {
+    min-height: 8rem;
+    resize: vertical;
+}
+
+.field__hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.field__error {
+    display: flex;
+    gap: 0.35rem;
+    margin: 0.4rem 0 0;
+    font-size: 0.85rem;
+    color: var(--danger);
+}
+
+.field__error::before {
+    content: "!";
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.15rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-contrast);
+    background: var(--danger);
+    border-radius: 50%;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    color: var(--accent-contrast);
+    background: var(--accent);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease),
+        background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.button:hover {
+    color: var(--accent-contrast);
+    background: color-mix(in srgb, var(--accent) 88%, var(--text));
+    box-shadow: var(--shadow-sm);
+}
+
+.button:active {
+    transform: translateY(1px);
+    box-shadow: none;
+}
+
+.button[disabled],
+.button[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.button--small {
+    padding: 0.34rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.button--quiet {
+    color: var(--text);
+    background: var(--surface-alt);
+    border-color: var(--border);
+}
+
+.button--quiet:hover {
+    color: var(--text);
+    background: var(--surface);
+    border-color: var(--accent);
+}
+
+.button--danger {
+    color: var(--danger);
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.button--danger:hover {
+    color: var(--accent-contrast);
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+.link-button {
+    padding: 0;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--accent);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transition: color var(--speed) var(--ease);
+}
+
+.link-button:hover {
+    color: var(--text);
+    text-decoration: underline;
+}
+
+.inline-form {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+.inline-form select {
+    width: auto;
+}
+
+.inline-form input[type="text"],
+.inline-form input[type="number"] {
+    width: auto;
+    min-width: 4rem;
+}
+
+.hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+}
+
+/* The search box that carries the home page. */
+.hero__search {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 34rem;
+    margin-top: 1.5rem;
+}
+
+.hero__search input {
+    min-width: 12rem;
+}
+
+.hero__search input {
+    flex: 1 1 auto;
+    padding: 0.7rem 1rem;
+    font: inherit;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+
+.hero__search input:focus {
+    outline: 0;
+    border-color: var(--accent);
+    box-shadow: var(--ring);
+}
+
+/*
+ * What the library holds, as a band across the full width rather than a stack
+ * in the corner of the hero. auto-fit spreads whatever number of figures the
+ * page passes, and the row keeps its shape from six down to one.
+ */
+.figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.75rem;
+    margin: 2.5rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Cards rather than one bordered strip: a half empty last row then shows page,
+   not a block of border colour. */
+.figure {
+    display: grid;
+    gap: 0.15rem;
+    align-content: start;
+    padding: 1rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.figures dt {
+    order: 2;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.figures dd {
+    order: 1;
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+}
+
+.figure__note {
+    order: 3;
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* A heading with something on the right of it, used above every list. */
+.section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 2.5rem 0 1rem;
+}
+
+.section-head h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.section-head a {
+    font-size: 0.9rem;
+}
+
+/*
+ * Block, not flex: a banner carries inline markup (links, <code>, a form) and a
+ * flex container would lay each of those out as its own column.
+ */
+.banner {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-left-width: 3px;
+    border-radius: var(--radius-sm);
+    font-size: 0.92rem;
+}
+
+.banner p {
+    margin: 0;
+}
+
+.banner code {
+    padding: 0.05rem 0.3rem;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    border-radius: 4px;
+}
+
+.banner--ok {
+    color: var(--ok);
+    background: var(--ok-soft);
+    border-color: color-mix(in srgb, var(--ok) 25%, transparent);
+}
+
+.banner--warn {
+    color: var(--warn);
+    background: var(--warn-soft);
+    border-color: color-mix(in srgb, var(--warn) 25%, transparent);
+}
+
+.banner--error {
+    color: var(--danger);
+    background: var(--danger-soft);
+    border-color: color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.filter-bar input[type="search"] {
+    flex: 1 1 16rem;
+    width: auto;
+}
+
+.filter-bar select {
+    width: auto;
+}
+
+.table-scroll {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+}
+
+.table th,
+.table td {
+    padding: 0.7rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+}
+
+.table th {
+    position: sticky;
+    top: 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    background: var(--surface);
+    border-bottom-color: var(--border);
+}
+
+.table tbody tr {
+    transition: background var(--speed) var(--ease);
+}
+
+.table tbody tr:hover {
+    background: var(--surface-alt);
+}
+
+.table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.table-scroll .table th:first-child,
+.table-scroll .table td:first-child {
+    padding-left: 1rem;
+}
+
+.table-scroll .table th:last-child,
+.table-scroll .table td:last-child {
+    padding-right: 1rem;
+}
+
+.pagination {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.pagination a {
+    padding: 0.4rem 0.8rem;
+    color: var(--text);
+    text-decoration: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.pagination a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Nothing here yet, said in a way that does not look like a broken page. */
+.empty {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: center;
+    margin: 1.5rem 0;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+}
+
+.empty p {
+    max-width: 34rem;
+    margin: 0;
+}
+
+.profile {
+    margin: 2.5rem 0;
+}
+
+.profile__identity {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile__identity h1 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+
+.profile__handle {
+    margin: 0.25rem 0 0;
+    color: var(--text-muted);
+}
+
+.profile__bio {
+    margin: 1.25rem 0 0;
+    max-width: var(--measure);
+}
+
+.avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 56px;
+    height: 56px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 50%;
+}
+
+.avatar--small {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+}
+
+.tag {
+    display: inline-block;
+    padding: 0.12rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--surface-alt);
+    color: var(--text-muted);
+    transition: color var(--speed) var(--ease), background var(--speed) var(--ease),
+        border-color var(--speed) var(--ease);
+}
+
+.tag--role {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.tag--warn {
+    color: var(--warn);
+    background: var(--warn-soft);
+}
+
+.stat-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin: 1.5rem 0;
+}
+
+.stat-row dt {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.stat-row dd {
+    margin: 0.2rem 0 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.permission-list {
+    columns: 2 14rem;
+    margin: 1rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.muted {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+details.panel summary {
+    cursor: pointer;
+}
+
+/* The catalogue (M2) */
+
+.browse__header {
+    margin: 2rem 0 1.5rem;
+}
+
+.browse__header h1 {
+    margin: 0 0 1rem;
+    font-size: 1.6rem;
+}
+
+.browse__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+}
+
+/*
+ * On a narrow screen the results come first and the filters follow, so nobody
+ * has to scroll past a long facet list to reach a book. The DOM keeps filters
+ * first for a screen reader and for the desktop column order.
+ */
+@media (max-width: 52rem) {
+    .browse__layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .browse__facets {
+        order: 2;
+    }
+
+    .browse__results {
+        order: 1;
+    }
+}
+
+.browse__facets {
+    position: sticky;
+    top: 5rem;
+    display: grid;
+    gap: 1.5rem;
+    max-height: calc(100vh - 7rem);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    padding: 1.1rem 1.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.92rem;
+}
+
+@media (max-width: 52rem) {
+    .browse__facets {
+        position: static;
+        max-height: none;
+    }
+}
+
+.browse__facets a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.browse__facets a:hover {
+    color: var(--accent);
+}
+
+/* In the narrow sidebar the count keeps to the right and the name wraps. */
+.browse__facets .tree__count {
+    margin-left: auto;
+}
+
+.browse__facets h2 {
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.75rem 0 0;
+}
+
+.tag--filter {
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.facet-list,
+.tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/*
+ * The indent is padding, not margin: a nested list is a flex item at 100% of
+ * its row, and a margin would push each level past its parent, one level at a
+ * time, until the page scrolled sideways.
+ */
+.tree ul {
+    list-style: none;
+    width: 100%;
+    margin: 0.25rem 0;
+    padding: 0 0 0 1.1rem;
+    border-left: 1px solid var(--border);
+}
+
+/*
+ * A count is a sibling of its link, so the row is a flex line: without this the
+ * number drops under a long category name.
+ */
+.tree li,
+.facet-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.1rem 0.3rem;
+    min-width: 0;
+    margin: 0.1rem 0;
+}
+
+.tree li > ul {
+    flex-basis: 100%;
+}
+
+.tree li > a,
+.facet-list li > a {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.15rem 0.4rem;
+    margin-left: -0.4rem;
+    border-radius: var(--radius-sm);
+    transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.tree a:hover,
+.facet-list a:hover {
+    background: var(--accent-soft);
+}
+
+/* A tree of links reads as a list, not as prose: no underlines. */
+.tree a,
+.facet-list a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.tree a:hover,
+.facet-list a:hover {
+    color: var(--accent);
+}
+
+.facet-list a[aria-current="page"] {
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+.tree__count {
+    display: inline-block;
+    flex: 0 0 auto;
+    margin-left: 0.4rem;
+    padding: 0 0.4rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: var(--surface-alt);
+    border-radius: 999px;
+}
+
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+}
+
+a.tag {
+    text-decoration: none;
+}
+
+a.tag:hover {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 1.25rem;
+    margin: 1rem 0;
+}
+
+.book-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 0.9rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease),
+        border-color var(--speed) var(--ease);
+}
+
+.book-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    box-shadow: var(--shadow);
+}
+
+.book-card:hover .cover img {
+    transform: scale(1.03);
+}
+
+.cover {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    border-radius: var(--radius-sm);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 2.4rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 240ms var(--ease);
+}
+
+/* Six stable tints so a shelf of coverless records does not read as one block. */
+.cover--0 { background: rgba(71, 38, 107, 0.14); }
+.cover--1 { background: rgba(28, 122, 74, 0.14); }
+.cover--2 { background: rgba(138, 90, 0, 0.16); }
+.cover--3 { background: rgba(32, 84, 163, 0.14); }
+.cover--4 { background: rgba(163, 32, 92, 0.13); }
+.cover--5 { background: rgba(20, 110, 120, 0.14); }
+
+.book-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.book-card__title {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    font-size: 0.98rem;
+    line-height: 1.35;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.book-card__title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.book-card__title a:hover {
+    color: var(--accent);
+}
+
+.book-card__byline {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* Dots between the facts, so "2024 Notes no file yet" reads as three things. */
+.book-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.book-card__meta > * + *::before {
+    content: "\00b7";
+    margin-right: 0.45rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+/* The meta line sets its own size; a .muted inside it must not grow. */
+.book-card__meta .muted {
+    font-size: inherit;
+}
+
+.book-card__byline {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.book-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin: 0.3rem 0 0;
+}
+
+.book {
+    margin: 2rem 0;
+}
+
+.book__head {
+    display: grid;
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 40rem) {
+    .book__head {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .book__cover {
+        max-width: 12rem;
+    }
+}
+
+.book__identity h1 {
+    margin: 0.2rem 0;
+    font-size: 1.8rem;
+    letter-spacing: -0.01em;
+}
+
+.book__subtitle {
+    margin: 0 0 0.4rem;
+    font-size: 1.05rem;
+    color: var(--text-muted);
+}
+
+.book__byline {
+    margin: 0 0 0.75rem;
+    font-weight: 600;
+}
+
+.book__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0 0 1rem;
+}
+
+.book__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+}
+
+.book__actions p {
+    margin: 0;
+}
+
+/*
+ * Every page with a sidebar uses the same shape: a wide main column and a
+ * fixed aside, collapsing to one column on a narrow screen. Book, browse,
+ * collection and review pages all share it, so no page is a lone left column
+ * with empty space beside it.
+ */
+.book__body,
+.page-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+    gap: 2rem;
+    align-items: start;
+    margin-top: 2rem;
+}
+
+@media (max-width: 60rem) {
+    .book__body,
+    .page-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* An empty aside would otherwise leave the main column stopping short. */
+.book__body:not(:has(.book__aside > *)),
+.page-body:not(:has(.page-aside > *)) {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.book__main,
+.page-main {
+    display: grid;
+    gap: 1.5rem;
+    align-content: start;
+    min-width: 0;
+}
+
+.book__aside,
+.page-aside {
+    display: grid;
+    gap: 1.5rem;
+    align-content: start;
+    min-width: 0;
+}
+
+/* Panels in a column stack on their own; the grid already spaces them. */
+.book__main > .panel,
+.book__aside > .panel,
+.page-main > .panel,
+.page-aside > .panel {
+    margin: 0;
+}
+
+.book__aside .status-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+}
+
+.book__description {
+    max-width: var(--measure);
+    margin: 0;
+}
+
+.breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.breadcrumb-list {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.field-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1rem;
+}
+
+fieldset.field {
+    margin: 0;
+    padding: 0.75rem 1rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+fieldset.field legend {
+    padding: 0 0.35rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.35rem;
+    max-height: 16rem;
+    overflow-y: auto;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.checkbox input {
+    width: auto;
+}
+
+.decision-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.decision-row:last-child {
+    border-bottom: 0;
+}
+
+/* Uploads and the queue (M3) */
+
+.badge {
+    display: inline-block;
+    min-width: 1.15rem;
+    margin-left: 0.25rem;
+    padding: 0 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.15rem;
+    text-align: center;
+    color: var(--accent-contrast);
+    background: var(--accent);
+    border-radius: 999px;
+}
+
+.page-aside h2 {
+    margin-top: 0;
+}
+
+.row--overdue td:first-child {
+    box-shadow: inset 3px 0 0 var(--warn);
+}
+
+.timeline {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.9rem;
+}
+
+.timeline li {
+    margin-bottom: 0.5rem;
+}
+
+.comment {
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.comment:last-of-type {
+    border-bottom: 0;
+}
+
+.comment__meta {
+    margin: 0 0 0.25rem;
+    font-size: 0.88rem;
+}
+
+.comment p:last-child {
+    margin: 0;
+}
+
+/* Book requests (M4) */
+
+.request-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.request-row,
+.request-head {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.request-row {
+    padding: 0.9rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+
+.request-row:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    box-shadow: var(--shadow-sm);
+}
+
+.request-row__title {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.request-row__title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.request-row__title a:hover {
+    color: var(--accent);
+}
+
+.request-row__meta {
+    margin: 0.2rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.request-head h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.6rem;
+}
+
+.vote {
+    margin: 0;
+    flex: 0 0 auto;
+}
+
+.vote__button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+    min-width: 3rem;
+    padding: 0.4rem 0.5rem;
+    font: inherit;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.vote__button:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.vote__button--on {
+    color: var(--accent-contrast);
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.vote__button--static {
+    cursor: default;
+}
+
+.vote__count {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Collections (M5) */
+
+.collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.collection-card {
+    padding: 1.1rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: transform var(--speed) var(--ease), border-color var(--speed) var(--ease),
+        box-shadow var(--speed) var(--ease);
+}
+
+.collection-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    box-shadow: var(--shadow);
+}
+
+.collection-card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.02rem;
+}
+
+.collection-card h3 a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.collection-card h3 a:hover {
+    color: var(--accent);
+}
+
+.collection-card p {
+    margin: 0 0 0.4rem;
+}
+
+.collection-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.collection-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.collection-list li:last-child {
+    border-bottom: 0;
+}
+
+.item-list {
+    margin: 0.5rem 0 1.5rem;
+    padding-left: 1.3rem;
+}
+
+.item-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.item-list li:last-child {
+    border-bottom: 0;
+}
+
+/* Row controls sit together and never wrap into the title. */
+.row-actions {
+    flex: 0 0 auto;
+    gap: 0.3rem;
+}
+
+/* Two forms in one panel need a line between them. */
+.curate form + h3,
+.curate form + form {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+
+.tree a[aria-current="page"] {
+    font-weight: 700;
+    color: var(--accent);
+}
+
+/* The reader (M6) */
+
+.reader {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 1rem 0 2rem;
+}
+
+.reader__bar {
+    position: sticky;
+    top: 4.5rem;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.reader__title a {
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+}
+
+.reader__title a:hover {
+    color: var(--accent);
+}
+
+.reader__controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reader__where {
+    min-width: 9rem;
+    font-size: 0.85rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.reader__stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 17rem);
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 52rem) {
+    .reader__stage {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.reader__viewport {
+    display: grid;
+    place-items: start center;
+    min-height: 70vh;
+    max-height: 82vh;
+    overflow: auto;
+    padding: 0.75rem;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+/* epub.js injects an iframe that needs a size to render into. */
+.reader__viewport > div {
+    width: 100%;
+    height: 78vh;
+}
+
+.reader__canvas {
+    max-width: 100%;
+    height: auto;
+    background: #fff;
+    box-shadow: var(--shadow);
+}
+
+.reader__text {
+    width: 100%;
+    max-width: var(--measure);
+    margin: 0;
+    padding: 1.5rem;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    font-family: var(--font);
+    font-size: 1rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.reader__aside h2 {
+    margin-top: 0;
+}
+
+/* Reviews, ratings and badges (M7) */
+
+.rating-stars {
+    color: var(--warn);
+    letter-spacing: 0.05em;
+}
+
+.book__rating {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+}
+
+.rating-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.rating-summary__score {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.rating-summary__score strong {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.rating-bars {
+    flex: 1 1 14rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: 22rem;
+}
+
+.rating-bars li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.rating-bars__label {
+    width: 1ch;
+    color: var(--text-muted);
+}
+
+.rating-bars__track {
+    flex: 1;
+    height: 0.45rem;
+    background: var(--surface-alt);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.rating-bars__fill {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+}
+
+/* One review in a list: the author line, then the text. */
+.review {
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+}
+
+.review:first-of-type {
+    border-top: 0;
+}
+
+.review--hidden {
+    opacity: 0.65;
+}
+
+.review__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.35rem;
+}
+
+.review__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.4rem 0 0;
+}
+
+.review p:last-child {
+    margin-bottom: 0;
+}
+
+.badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 1rem 0 0;
+}
+
+/* Staff-only controls, folded away from the reading surface. */
+.staff-tools > summary {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.staff-tools__body {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.staff-tools__body p {
+    margin: 0;
+}
+
+/* A file input that matches the other controls instead of the browser default. */
+input[type="file"] {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+input[type="file"]:hover {
+    border-color: var(--accent);
+}
+
+input[type="file"]::file-selector-button {
+    margin-right: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+input[type="file"]::file-selector-button:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.rating-summary__none {
+    font-size: 1.1rem;
+}
+
+/* The admin surface (M8) */
+
+/* One row of section links, shared by every admin page. */
+.subnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: -0.5rem 0 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.subnav a {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.subnav a:hover {
+    color: var(--text);
+    background: var(--surface-alt);
+}
+
+.subnav a[aria-current="page"] {
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+}
+
+
+.status-item__number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.spark-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1.5rem;
+}
+
+.spark-row h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.spark {
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    height: 3.5rem;
+    padding: 0.15rem;
+    background: var(--surface-alt);
+    border-radius: var(--radius-sm);
+}
+
+.spark__bar {
+    flex: 1;
+    min-width: 2px;
+    background: var(--accent);
+    border-radius: 1px 1px 0 0;
+    opacity: 0.85;
+}
+
+.audit-change {
+    max-width: 26rem;
+}
+
+.audit-change .status-item__detail {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+/* Language switch (M9) */
+
+.site-footer__languages a[aria-current="true"] {
+    font-weight: 700;
+    color: var(--accent);
+}

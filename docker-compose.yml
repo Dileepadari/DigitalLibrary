@@ -1,0 +1,57 @@
+# One command local setup: docker compose up --build
+# Then: docker compose exec app php cli/console.php migrate
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: digital_library
+      DB_USERNAME: library
+      DB_PASSWORD: library
+    volumes:
+      # Bind mount so edits show up without a rebuild. storage/ stays in a named
+      # volume so uploaded files survive a rebuild and are not written into the
+      # host checkout by the www-data user.
+      - .:/var/www/html
+      - library_storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.4
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: digital_library
+      MYSQL_USER: library
+      MYSQL_PASSWORD: library
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - library_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-plibrary", "-ulibrary"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Optional: docker compose --profile tools up adminer
+  adminer:
+    image: adminer:latest
+    profiles: ["tools"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  library_db:
+  library_storage:

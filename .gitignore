@@ -1,0 +1,40 @@
+# Dependencies
+/vendor
+/node_modules
+
+# Environment. Any dotfile ending in .env, whatever it is called, because the
+# name is the part that gets typed wrong.
+.env
+*.env
+!.env.example
+
+# Runtime data is ignored by the .gitignore inside each storage directory, which
+# keeps the directory itself in the repo. Ignoring the contents from here as well
+# would swallow those files too, and a fresh clone would have no storage tree.
+
+# Logs. Only a root-level logs/ directory: a bare "logs" rule would also swallow
+# storage/logs/.gitignore and the directory with it.
+*.log
+/logs
+
+# Tooling caches
+.phpunit.result.cache
+.phpunit.cache
+.php-cs-fixer.cache
+/coverage
+/build
+
+# Editor and OS cruft
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Merge and patch leftovers
+*.orig
+*.rej
+*.bak

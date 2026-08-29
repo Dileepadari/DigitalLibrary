@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Lint, analyse, test
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: digital_library_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, mbstring, gd, zip, fileinfo
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('composer.json') }}
+          restore-keys: composer-
+
+      - run: composer install --no-interaction --prefer-dist
+
+      - name: Configure the environment
+        run: |
+          cp .env.example .env
+          sed -i 's/^DB_DATABASE=.*/DB_DATABASE=digital_library_test/' .env
+          sed -i 's/^DB_USERNAME=.*/DB_USERNAME=root/' .env
+          sed -i 's/^DB_PASSWORD=.*/DB_PASSWORD=root/' .env
+          php cli/console.php key:generate
+
+      - run: php cli/console.php migrate
+
+      - name: Migrations roll back and re-apply cleanly
+        run: |
+          php cli/console.php migrate:rollback
+          php cli/console.php migrate
+
+      - name: Seed data loads, and loads only once
+        run: |
+          php cli/console.php db:seed
+          php cli/console.php db:seed | grep -q '0 book(s) added'
+
+      - name: Storage tree is sane
+        run: |
+          php cli/console.php storage:init
+          php cli/console.php storage:verify
+
+      - run: composer lint
+      - run: composer stan
+
+      # The database tests only run when DB_DATABASE names a test database,
+      # which the step above arranged.
+      - run: composer test
+
+      - name: Health check reports a working install
+        run: |
+          php cli/console.php serve 127.0.0.1 8000 &
+          for i in $(seq 1 20); do
+            curl -fsS http://127.0.0.1:8000/health && break || sleep 1
+          done
+          curl -fsS http://127.0.0.1:8000/health | tee /dev/stderr | grep -q '"ok": true'
