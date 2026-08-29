@@ -78,15 +78,22 @@ final class UserRepository
         string $passwordHash,
         Role $role = Role::Member,
         bool $verified = false,
+        ?int $quota = null,
     ): int {
-        return $this->db->insert('users', [
+        $values = [
             'name'              => $name,
             'username'          => mb_strtolower($username),
             'email'             => mb_strtolower($email),
             'password_hash'     => $passwordHash,
             'role'              => $role->value,
             'email_verified_at' => $verified ? gmdate('Y-m-d H:i:s') : null,
-        ]);
+        ];
+
+        if ($quota !== null) {
+            $values['storage_quota'] = $quota;
+        }
+
+        return $this->db->insert('users', $values);
     }
 
     public function updateProfile(int $id, string $name, ?string $bio): void

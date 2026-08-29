@@ -199,6 +199,12 @@ $canEdit = $this->gate->allows('book.edit.any')
             <p class="muted">Licence note: <?= $this->e($book->licenceNote) ?></p>
         <?php endif ?>
 
+        <p class="muted">
+            <a href="<?= $this->url('report') ?>?book=<?= $this->e($book->slug) ?>">
+                Something wrong with this record?
+            </a>
+        </p>
+
         <?php if ($book->sourceUrl !== null) : ?>
             <p class="muted">Source: <a href="<?= $this->e($book->sourceUrl) ?>"
                 rel="nofollow noopener"><?= $this->e($book->sourceUrl) ?></a></p>

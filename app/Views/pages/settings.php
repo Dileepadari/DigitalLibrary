@@ -107,6 +107,13 @@ $this->end();
         </dl>
     </div>
 
+    <?php if ($user->role->value === 'member' && $this->gate->allows('librarian.apply')) : ?>
+        <p class="muted">
+            Want to help review what people upload?
+            <a href="<?= $this->url('apply') ?>">Apply to be a librarian</a>.
+        </p>
+    <?php endif ?>
+
     <details class="panel">
         <summary><strong>What this account may do</strong> (<?= count($permissions) ?> permissions)</summary>
         <ul class="permission-list">

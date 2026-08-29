@@ -11,15 +11,16 @@ $unread = $this->notifications->unreadCount($user?->id);
             <span class="brand__badge">
                 <img class="logo-mono" src="<?= $this->asset('/assets/img/logo-mark.png') ?>" alt="" width="20" height="20">
             </span>
-            <span class="brand__name"><?= $this->e($this->config('app.name')) ?></span>
+            <span class="brand__name"><?= $this->e($this->appName) ?></span>
         </a>
 
         <nav class="site-nav" aria-label="Main">
-            <!-- Requests and Collections are added in M4 and M5. -->
             <a href="<?= $this->url('books') ?>">Browse</a>
             <a href="<?= $this->url('categories') ?>">Categories</a>
             <a href="<?= $this->url('tags') ?>">Tags</a>
-            <a href="<?= $this->url('requests') ?>">Requests</a>
+            <?php if ($this->settings->bool('features.requests', true)) : ?>
+                <a href="<?= $this->url('requests') ?>">Requests</a>
+            <?php endif ?>
             <a href="<?= $this->url('collections') ?>">Collections</a>
             <a href="<?= $this->url('contributors') ?>">People</a>
 
@@ -36,8 +37,8 @@ $unread = $this->notifications->unreadCount($user?->id);
                 <a href="<?= $this->url('notifications') ?>">
                     Alerts<?php if ($unread > 0) : ?><span class="badge"><?= (int) $unread ?></span><?php endif ?>
                 </a>
-                <?php if ($this->gate->allows('user.manage')) : ?>
-                    <a href="<?= $this->url('admin.users') ?>">Admin</a>
+                <?php if ($this->gate->allows('settings.manage')) : ?>
+                    <a href="<?= $this->url('admin') ?>">Admin</a>
                 <?php endif ?>
                 <a href="<?= $this->url('profile', ['username' => $user->username]) ?>">
                     <?= $this->e($user->username) ?>

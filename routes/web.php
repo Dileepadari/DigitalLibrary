@@ -8,6 +8,12 @@
 
 declare(strict_types=1);
 
+use App\Controllers\Admin\ApplicationController;
+use App\Controllers\Admin\AuditController;
+use App\Controllers\Admin\DashboardController;
+use App\Controllers\Admin\SettingsController;
+use App\Controllers\Admin\StorageController;
+use App\Controllers\Admin\TakedownController;
 use App\Controllers\Admin\UserController;
 use App\Controllers\Auth\EmailVerificationController;
 use App\Controllers\Auth\LoginController;
@@ -16,6 +22,7 @@ use App\Controllers\Auth\RegisterController;
 use App\Controllers\Librarian\CatalogueController;
 use App\Controllers\Librarian\QueueController;
 use App\Controllers\Librarian\TaxonomyController;
+use App\Controllers\Web\ApplyController;
 use App\Controllers\Web\BookController;
 use App\Controllers\Web\BookFormController;
 use App\Controllers\Web\CategoryController;
@@ -26,9 +33,10 @@ use App\Controllers\Web\FileController;
 use App\Controllers\Web\HomeController;
 use App\Controllers\Web\ProfileController;
 use App\Controllers\Web\ReaderController;
+use App\Controllers\Web\ReportController;
 use App\Controllers\Web\ReviewController;
 use App\Controllers\Web\RequestController;
-use App\Controllers\Web\SettingsController;
+use App\Controllers\Web\SettingsController as WebSettingsController;
 use App\Controllers\Web\SubmissionController;
 use App\Controllers\Web\TagController;
 use App\Controllers\Web\UploadController;
@@ -91,6 +99,10 @@ return static function (Router $router): void {
 
         // Reviews and the contributor board.
         $router->get('/contributors', [ContributorController::class, 'index'])->name('contributors');
+
+        // Anyone may send a takedown notice, account or not.
+        $router->get('/report', [ReportController::class, 'create'])->name('report');
+        $router->post('/report', [ReportController::class, 'store']);
 
         $router->post('/books/{slug}/reviews', [ReviewController::class, 'store'])
             ->middleware(Authenticate::class, Authorize::class . ':review.write')
@@ -175,9 +187,13 @@ return static function (Router $router): void {
             $router->get('/me/notifications', [SubmissionController::class, 'notifications'])
                 ->name('notifications');
 
-            $router->get('/me/settings', [SettingsController::class, 'edit'])->name('settings');
-            $router->post('/me/settings', [SettingsController::class, 'update']);
-            $router->post('/me/password', [SettingsController::class, 'password'])->name('settings.password');
+            $router->get('/apply', [ApplyController::class, 'create'])->name('apply');
+            $router->post('/apply', [ApplyController::class, 'store'])
+                ->middleware(Authorize::class . ':librarian.apply');
+
+            $router->get('/me/settings', [WebSettingsController::class, 'edit'])->name('settings');
+            $router->post('/me/settings', [WebSettingsController::class, 'update']);
+            $router->post('/me/password', [WebSettingsController::class, 'password'])->name('settings.password');
         });
 
         // The moderation queue. `moderation.queue` is what a librarian is for.
@@ -215,6 +231,24 @@ return static function (Router $router): void {
             'prefix'     => '/admin',
             'middleware' => [Authenticate::class, Authorize::class . ':user.manage'],
         ], static function (Router $router): void {
+            $router->get('/', [DashboardController::class, 'index'])->name('admin');
+
+            $router->get('/settings', [SettingsController::class, 'edit'])->name('admin.settings');
+            $router->post('/settings', [SettingsController::class, 'update']);
+
+            $router->get('/audit', [AuditController::class, 'index'])->name('admin.audit');
+            $router->get('/audit.csv', [AuditController::class, 'export'])->name('admin.audit.export');
+
+            $router->get('/storage', [StorageController::class, 'index'])->name('admin.storage');
+
+            $router->get('/takedowns', [TakedownController::class, 'index'])->name('admin.takedowns');
+            $router->post('/takedowns/{id:[0-9]+}', [TakedownController::class, 'decide'])
+                ->name('admin.takedowns.decide');
+
+            $router->get('/applications', [ApplicationController::class, 'index'])->name('admin.applications');
+            $router->post('/applications/{id:[0-9]+}', [ApplicationController::class, 'decide'])
+                ->name('admin.applications.decide');
+
             $router->get('/users', [UserController::class, 'index'])->name('admin.users');
             $router->post('/users/{id:[0-9]+}/role', [UserController::class, 'updateRole'])->name('admin.users.role');
             $router->post('/users/{id:[0-9]+}/status', [UserController::class, 'updateStatus'])

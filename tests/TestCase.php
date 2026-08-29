@@ -107,6 +107,15 @@ abstract class TestCase extends BaseTestCase
         return trim((string) preg_replace('/\s+/', ' ', $html));
     }
 
+    /**
+     * The readable text of a page: tags removed and whitespace collapsed, for
+     * asserting on a sentence that has a link in the middle of it.
+     */
+    protected function text(string $html): string
+    {
+        return $this->flatten(strip_tags($html));
+    }
+
     protected function assertRedirectedTo(string $expected, Response $response): void
     {
         $this->assertContains($response->status(), [302, 303], 'Expected a redirect.');

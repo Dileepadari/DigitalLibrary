@@ -165,6 +165,14 @@ could be awarded twice.
 A new badge is a migration inserting a row into `badges`: a name, the action to
 count and the threshold. No code changes.
 
+## Adding a setting
+
+Two places: a default in a migration (so a fresh install has it) and an entry in
+the `FIELDS` list in `Admin\SettingsController` (so an admin can change it).
+Read it where it is used, through `SettingsRepository`, rather than at boot:
+that is what makes a change take effect without a deploy. Fall back to the
+config value or a literal, so the site still works if the row is missing.
+
 ## Adding a page that needs a session
 
 Put the route inside the `Authenticate::class` group in `routes/web.php`. Signed

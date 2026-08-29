@@ -5,7 +5,7 @@ data access, security model and setup. For what the app does from a user's point
 of view, see [README.md](./README.md). For the design of the features that are
 not built yet, see [PLAN.md](./PLAN.md).
 
-This file describes the code that exists today, at milestones 0 to 7.
+This file describes the code that exists today, at milestones 0 to 8.
 
 ## Table of contents
 
@@ -23,6 +23,7 @@ This file describes the code that exists today, at milestones 0 to 7.
 - [Collections](#collections)
 - [Reading](#reading)
 - [Reviews and reputation](#reviews-and-reputation)
+- [Running the library](#running-the-library)
 - [Data access](#data-access)
 - [Data model](#data-model)
 - [Migrations](#migrations)
@@ -104,18 +105,20 @@ app/
                    the reader, submissions)
     Auth/          register, login, password reset, email verification
     Librarian/     the moderation queue, the catalogue list, the taxonomy screen
-    Admin/         the admin area (users)
+    Admin/         the admin area: dashboard, settings, audit, storage,
+                   takedowns, librarian applications, users
     Api/           returns JSON
     Controller.php base class: render, redirect, flash, backWithErrors
-  Middleware/      SecurityHeaders, StartSession, TrackLastSeen, VerifyCsrf,
-                   Authenticate, RedirectIfAuthenticated, Authorize
+  Middleware/      SecurityHeaders, StartSession, TrackLastSeen,
+                   MaintenanceMode, VerifyCsrf, Authenticate,
+                   RedirectIfAuthenticated, Authorize
   Models/          typed rows, built only by their repositories: User, Book,
                    Author, Category, Tag, BookFile, ModerationRequest,
                    BookRequest, Collection
   Repositories/    all SQL: User, Permission, AuthToken, LoginAttempt, AuditLog,
                    Settings, Book, Author, Publisher, Category, Tag, BookFile,
                    Moderation, Notification, BookRequest, Collection, Reading,
-                   Review, Reputation, Badge
+                   Review, Reputation, Badge, Takedown, Application, Statistics
   Services/        Auth (who is signed in), Gate (what they may do),
                    AccountService (registration, verification, resets),
                    BookService (create and edit a record), TaxonomyService,
@@ -209,6 +212,14 @@ Current routes:
 | GET | `/files/{id}` | csrf, auth, `book.download` | `Web\FileController@show` |
 | GET | `/covers/{id}` | csrf | `Web\CoverController@show` |
 | GET | `/contributors` | csrf | `Web\ContributorController@index` |
+| GET, POST | `/report` | csrf | `Web\ReportController` (no account needed) |
+| GET, POST | `/apply` | csrf, auth | `Web\ApplyController` |
+| GET | `/admin` | csrf, auth, `user.manage` | `Admin\DashboardController@index` |
+| GET, POST | `/admin/settings` | csrf, auth, `user.manage` | `Admin\SettingsController` |
+| GET | `/admin/audit`, `/admin/audit.csv` | csrf, auth, `user.manage` | `Admin\AuditController` |
+| GET | `/admin/storage` | csrf, auth, `user.manage` | `Admin\StorageController@index` |
+| GET, POST | `/admin/takedowns` | csrf, auth, `user.manage` | `Admin\TakedownController` |
+| GET, POST | `/admin/applications` | csrf, auth, `user.manage` | `Admin\ApplicationController` |
 | POST | `/books/{slug}/reviews` | csrf, auth, `review.write` | `Web\ReviewController@store` |
 | POST | `/reviews/{id}/delete` | csrf, auth | `Web\ReviewController@destroy` |
 | POST | `/reviews/{id}/helpful` | csrf, auth, `review.write` | `Web\ReviewController@vote` |
@@ -741,6 +752,69 @@ A badge is a row: a name, an action and a threshold. `awardBadgesFor()` counts
 the person's events of that action and awards anything they have passed, once,
 with a notification. Adding a badge is an INSERT in a migration, not code.
 
+## Running the library
+
+### Settings
+
+`settings` holds JSON values read through `SettingsRepository`, which caches the
+table for the request. `Admin\SettingsController` declares each editable field
+once, with its type, so the form, the cast and the write cannot disagree; adding
+a setting is a row in that list plus a default in a migration.
+
+**A setting is read where it is used, not at boot**, so a change takes effect on
+the next request without a deploy or a restart:
+
+| Key | What reads it |
+|---|---|
+| `site.name`, `site.tagline` | the header and the home page |
+| `registration.mode` | `RegisterController`, which still lets the first account through |
+| `uploads.max_bytes` | `UploadPipeline`, over the environment default |
+| `uploads.default_quota` | `AccountService` when it creates an account |
+| `uploads.require_licence_evidence` | the review screen |
+| `features.reviews`, `features.requests` | the templates that would show them |
+| `site.maintenance`, `site.maintenance_message` | `MaintenanceMode` |
+
+Every change is written to the audit log with the previous value.
+
+### Maintenance mode
+
+`MaintenanceMode` runs after the session middleware and returns a 503 with a
+`Retry-After` for everyone but an admin. `/health` and `/api/` are exempt: a
+monitor that cannot tell "closed for an hour" from "down" is not much of a
+monitor. `/login` is exempt too, or an admin locked out of a closed site could
+never turn it back on.
+
+### The audit log
+
+`AuditLogRepository::paginate()` filters by actor, action prefix and subject
+type; `export()` walks the same filter in pages of 200 and hands the rows to a
+CSV. Nothing in the application updates or deletes an audit row.
+
+### Takedowns
+
+Anyone may send a notice at `/report`, with or without an account: a rights
+holder should not have to join a library to ask it to stop hosting their book.
+The admin console upholds or rejects it, and upholding hides the book at once
+through `BookService::setStatus()`. The notice, the reason and who decided it
+stay on the record either way, because an operator has to be able to show what
+they did and when. See PLAN.md section 9.
+
+### Librarian applications
+
+A member with `librarian.apply` writes a statement; an admin approves it, which
+changes the role, notifies them and writes the audit entry. These have their own
+screen rather than a place in the moderation queue, because every librarian can
+see the queue and only an admin may decide who joins them.
+
+### The dashboard
+
+`StatisticsRepository` is aggregate queries against the tables that already
+exist: totals, a per-day count for the last N days with the empty days filled
+in, the busiest categories, the most downloaded books, and queue health (median
+time to a decision, how many have waited over a week). There is no analytics
+pipeline and there does not need to be one until a library is large enough for
+these to hurt.
+
 ## Data access
 
 `App\Core\Db` wraps PDO with `ERRMODE_EXCEPTION`, `FETCH_ASSOC` and emulated
@@ -762,7 +836,7 @@ From M1, SQL lives in `app/Repositories` and nowhere else.
 
 ## Data model
 
-Thirty-five tables. Every timestamp is UTC (see the note in
+Thirty-seven tables. Every timestamp is UTC (see the note in
 [Data access](#data-access)).
 
 **`users`** - `id`, `name`, `username` (unique, lowercase), `email` (unique,
@@ -899,6 +973,13 @@ enum(visible, hidden, removed), `hidden_reason`, `helpful_count`. `books` gained
 migration; ten to begin with.
 
 **`user_badges`** - (`user_id`, `badge_id`), `awarded_at`.
+
+**`takedowns`** - `book_id`, `subject_url`, `claimant_name`, `claimant_email`,
+`claimant_role`, `basis`, `status` enum(open, upheld, rejected), `outcome_note`,
+`handled_by`, `handled_at`, `ip_hash`.
+
+**`librarian_applications`** - `user_id`, `statement`, `status` enum(pending,
+approved, rejected), `decided_by`, `decided_at`.
 
 `users` also gained `strikes`, incremented by a copyright rejection.
 
@@ -1095,12 +1176,26 @@ composer test
 Skipped tests are reported as skipped, not passed, so a run with no database
 cannot look like a green one.
 
-The database tests are integration tests: each one truncates the tables, re-seeds
-the taxonomy and badges, and every request inside it boots a fresh kernel with
-its own connection. The whole suite takes ten minutes or so on a laptop. That
-is the price of testing the real thing rather than mocks, and it is why the unit
+The database tests are integration tests: every request inside one boots a fresh
+kernel with its own connection, and the tables are reset between tests. The whole
+suite takes about three minutes on a laptop; it took nineteen before the reset
+below was made incremental. That is
+the price of testing the real thing rather than mocks, and it is why the unit
 suite (`phpunit --testsuite Unit`, under two seconds) is worth running first
 while you work.
+
+The reset is incremental, because doing it the obvious way was costing more than
+the tests: `DatabaseTestCase` asks in two queries which tables have anything in
+them (an `EXISTS` each) and whether the seeded tables still match their seed (a
+`CHECKSUM TABLE`), then truncates only those. A count would not do for the
+seeded tables: a test that changes a setting's value leaves the same number of
+rows behind. If any seeded table has moved, they all go back together, because
+the seed inserts come from the migrations as a set. The first test of a run
+clears everything unconditionally, since the database may hold anything when the
+process starts, and the seed tables are also restored on the way *out* of a test:
+the tests that need no database still read the settings table, so a test that
+turned maintenance mode on would otherwise close the site for whatever ran
+next.
 
 Helpers do the setup: `makeUser()` writes an account straight to the table,
 `makeBook()` creates a record with its authors, categories and tags through the
@@ -1269,6 +1364,18 @@ schema, `storage/` writable by the web user and outside the webroot, and
   `ob_flush()` as it goes, which empties a plain output buffer before the test
   can read it. `TestCase::bodyOf()` uses an output *handler* instead, which sees
   every chunk.
+- **PHP's built-in server 404s a URI with a dot in it.** It treats
+  `/admin/audit.csv` as a request for a missing static file. `console.php serve`
+  passes `cli/dev-router.php` for that reason; Apache and nginx are fine because
+  both fall through to the front controller when the file does not exist.
+- **A filter dropdown contains every value it can filter by.** An audit test
+  asserting the filtered page "does not contain user.status_changed" failed
+  because the dropdown lists it. Match the row (`<code>action</code>`), not the
+  page. Same family as the placeholder trap below.
+- **`share()` is silent when it does not happen.** A service missing from the
+  list in bootstrap.php still resolves, it is just rebuilt every time, throwing
+  away whatever it cached. Several milestones' worth of additions had quietly
+  failed to apply before `ContainerTest` was written to assert the list.
 - **HTML wraps, so string assertions on a sentence break.** A template that
   writes "from 3 reviews" across three indented lines does not contain the string
   "from 3 reviews". `TestCase::flatten()` collapses the whitespace; use it rather

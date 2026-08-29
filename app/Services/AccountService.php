@@ -10,6 +10,7 @@ use App\Core\Router;
 use App\Models\User;
 use App\Repositories\AuditLogRepository;
 use App\Repositories\AuthTokenRepository;
+use App\Repositories\SettingsRepository;
 use App\Repositories\UserRepository;
 use App\Support\Password;
 use App\Support\Role;
@@ -28,6 +29,7 @@ final class AccountService
         private readonly AuditLogRepository $audit,
         private readonly Mailer $mailer,
         private readonly Router $router,
+        private readonly SettingsRepository $settings,
         private readonly Config $config,
     ) {
     }
@@ -48,6 +50,7 @@ final class AccountService
             Password::hash($password),
             $isFirst ? Role::Admin : Role::Member,
             $isFirst,
+            (int) $this->settings->get('uploads.default_quota', 2147483648),
         );
 
         $user = $this->users->findById($id);

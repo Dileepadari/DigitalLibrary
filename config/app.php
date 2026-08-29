@@ -21,5 +21,5 @@ return [
     'session_lifetime' => (int) Env::get('SESSION_LIFETIME', 7200),
 
     // Bumped by hand at each milestone; shown on the status panel and /health.
-    'version'          => '0.8.0-m7',
+    'version'          => '0.9.0-m8',
 ];

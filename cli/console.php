@@ -388,12 +388,16 @@ try {
             // single process server would serialise them into a stall.
             putenv('PHP_CLI_SERVER_WORKERS=4');
             out('Serving ' . $config->get('app.name') . ' on http://' . $host . ':' . $port);
+            // The router script is what makes a URI with a dot in it, such as
+            // /admin/audit.csv, reach the application instead of 404ing as a
+            // missing static file.
             passthru(sprintf(
-                '%s -S %s:%s -t %s',
+                '%s -S %s:%s -t %s %s',
                 escapeshellarg(PHP_BINARY),
                 escapeshellarg($host),
                 escapeshellarg($port),
-                escapeshellarg(BASE_PATH . '/public')
+                escapeshellarg(BASE_PATH . '/public'),
+                escapeshellarg(BASE_PATH . '/cli/dev-router.php')
             ));
 
             break;

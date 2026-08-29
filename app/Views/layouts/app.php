@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= $this->slot('title', $this->e($this->config('app.name'))) ?></title>
+    <title><?= $this->slot('title', $this->e($this->appName)) ?></title>
     <meta name="description" content="<?= $this->e($this->config('app.tagline')) ?>">
     <link rel="icon" href="<?= $this->asset('/assets/img/logo-mark.png') ?>" type="image/png">
     <link rel="stylesheet" href="<?= $this->asset('/assets/css/app.css') ?>">

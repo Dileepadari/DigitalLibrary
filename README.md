@@ -15,10 +15,10 @@ For the full design and the road to it, see **[PLAN.md](./PLAN.md)**.
 
 ## Where the project is
 
-Milestones 0 to 7 are complete: the application core, accounts with the three
+Milestones 0 to 8 are complete: the application core, accounts with the three
 roles and a real permission system, the catalogue, uploads with the review queue
-behind them, book requests, collections, reading in the browser, and the
-community layer of reviews, reputation and badges. A member can ask for a book, upvote what someone
+behind them, book requests, collections, reading in the browser, the community
+layer of reviews, reputation and badges, and the admin surface that runs it. A member can ask for a book, upvote what someone
 else asked for, add a book and attach a file; a librarian reviews it; approving
 it publishes the file and tells everyone who wanted it. Files can be read in the
 browser or downloaded.
@@ -33,8 +33,8 @@ browser or downloaded.
 | M5 Collections | the deep folder tree, sharing, forking and following | done |
 | M6 Reading | PDF and EPUB readers, reading progress, bookmarks | done |
 | M7 Community | reviews, ratings, reputation, badges, the contributor board | done |
-| M8 Admin | settings, audit log viewer, storage dashboard, analytics, takedowns | next |
-| M9 Polish | full text search, public API, OPDS and RSS, Hindi, accessibility | planned |
+| M8 Admin | settings, audit log viewer, storage dashboard, analytics, takedowns, librarian applications | done |
+| M9 Polish | full text search, public API, OPDS and RSS, Hindi, accessibility | next |
 
 What works today:
 
@@ -59,6 +59,12 @@ What works today:
   on every listing. Librarians can hide a review, with a reason the author sees
 - Reputation for work the library keeps, badges for doing it repeatedly, and a
   contributor board at `/contributors`
+- An admin surface: site settings and feature flags that take effect at once, a
+  filterable audit log with a CSV export, a storage dashboard, thirty days of
+  numbers, and maintenance mode
+- A public takedown form anyone can use without an account, and an admin console
+  that hides a book the moment a notice is upheld
+- Members can apply to become librarians; only an admin decides
 - Book requests: ask for what is missing, upvote what others asked for, claim one
   to work on, and answer one by adding the book. Everyone who voted is told when
   it arrives

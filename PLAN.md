@@ -1,6 +1,6 @@
 # Digital Library - Project Plan
 
-Status: v1, M0 to M7 built
+Status: v1, M0 to M8 built
 Date: 2026-08-28
 Owner: ADK DEV
 Companion docs: `README.md` (users), `DEVDOC.md` (contributors). Both are written after this plan is agreed.
@@ -400,7 +400,7 @@ Each milestone ends with the app runnable and the docs updated in the same commi
 | M5 Collections | tree model, personal shelves, public proposal and approval, curation, fork and follow | done |
 | M6 Reading | PDF and EPUB readers, progress, bookmarks, downloads with range support | done |
 | M7 Community | reviews, ratings, reputation, badges, leaderboard, profiles | done |
-| M8 Admin and ops | settings, feature flags, audit log, storage dashboard, analytics, takedowns, backups | 1.5 weeks |
+| M8 Admin and ops | settings, feature flags, audit log, storage dashboard, analytics, takedowns, applications | done |
 | M9 Polish | full text search, API, OPDS and RSS, i18n Hindi, accessibility pass, performance, docs and screenshots | 2 weeks |
 
 MVP line: M0 through M4 is a usable library with the three roles and the approval loop working end to end. Everything after that is depth.
@@ -448,6 +448,14 @@ Settled at M1: the first account registered on an empty install becomes a
 verified admin, because an install with no admin can never promote anyone. Email
 delivery is PHPMailer over SMTP when `MAIL_DRIVER=smtp`, PHP's `mail()` when
 `mail`, and the log file otherwise.
+
+Settled at M8: librarian applications get their own admin screen rather than a
+place in the moderation queue, because every librarian can see the queue and
+only an admin may decide who becomes one. Settings that change behaviour are read
+from the database at the point of use, so a change takes effect immediately
+without a deploy or a restart. Maintenance mode exempts the health check: a
+monitor that cannot tell "closed for an hour" from "down" is not much of a
+monitor.
 
 Settled at M7: reputation is a running total on the user row plus an event per
 award, because without the events nobody could answer "why do I have 47 points?"

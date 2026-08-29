@@ -21,28 +21,32 @@ use App\Core\Router;
 use App\Core\Session;
 use App\Core\Storage;
 use App\Core\View;
+use App\Middleware\MaintenanceMode;
 use App\Middleware\SecurityHeaders;
 use App\Middleware\StartSession;
 use App\Middleware\TrackLastSeen;
+use App\Repositories\ApplicationRepository;
 use App\Repositories\AuditLogRepository;
+use App\Repositories\AuthTokenRepository;
 use App\Repositories\AuthorRepository;
 use App\Repositories\BadgeRepository;
-use App\Repositories\AuthTokenRepository;
 use App\Repositories\BookFileRepository;
 use App\Repositories\BookRepository;
 use App\Repositories\BookRequestRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\CollectionRepository;
+use App\Repositories\LoginAttemptRepository;
 use App\Repositories\ModerationRepository;
 use App\Repositories\NotificationRepository;
+use App\Repositories\PermissionRepository;
+use App\Repositories\PublisherRepository;
 use App\Repositories\ReadingRepository;
 use App\Repositories\ReputationRepository;
 use App\Repositories\ReviewRepository;
-use App\Repositories\LoginAttemptRepository;
-use App\Repositories\PermissionRepository;
-use App\Repositories\PublisherRepository;
 use App\Repositories\SettingsRepository;
+use App\Repositories\StatisticsRepository;
 use App\Repositories\TagRepository;
+use App\Repositories\TakedownRepository;
 use App\Repositories\UserRepository;
 use App\Services\AccountService;
 use App\Services\Auth;
@@ -98,8 +102,12 @@ $container->singleton(Mailer::class, static fn (Container $c): Mailer => new Mai
     (string) $config->get('storage.logs')
 ));
 
-// Resolved by autowiring, but only once per request: each of these caches
-// something (the signed-in user, the permission list, the settings table).
+// Resolved by autowiring, but only once per request: each of these either
+// caches something (the signed-in user, the permission list, the settings
+// table) or is asked for several times while handling one request.
+//
+// Anything missing from this list still works; it is just rebuilt on every
+// resolution, which throws away its cache. ContainerTest keeps the list honest.
 foreach (
     [
     UserRepository::class,
@@ -108,9 +116,36 @@ foreach (
     LoginAttemptRepository::class,
     AuditLogRepository::class,
     SettingsRepository::class,
+    BookRepository::class,
+    BookFileRepository::class,
+    AuthorRepository::class,
+    PublisherRepository::class,
+    CategoryRepository::class,
+    TagRepository::class,
+    ModerationRepository::class,
+    NotificationRepository::class,
+    BookRequestRepository::class,
+    CollectionRepository::class,
+    ReadingRepository::class,
+    ReputationRepository::class,
+    ReviewRepository::class,
+    BadgeRepository::class,
+    TakedownRepository::class,
+    ApplicationRepository::class,
+    StatisticsRepository::class,
     Auth::class,
     Gate::class,
     AccountService::class,
+    BookService::class,
+    TaxonomyService::class,
+    NotificationService::class,
+    CoverGenerator::class,
+    UploadPipeline::class,
+    BookRequestService::class,
+    CollectionService::class,
+    ReputationService::class,
+    ReviewService::class,
+    ModerationService::class,
     ] as $service
 ) {
     $container->share($service);
@@ -129,7 +164,12 @@ $container->singleton(View::class, static function (Container $c) use ($config, 
     $view->share('auth', $c->get(Auth::class));
     $view->share('gate', $c->get(Gate::class));
     $view->share('notifications', $c->get(NotificationService::class));
-    $view->share('appName', $config->get('app.name'));
+    $view->share('settings', $c->get(SettingsRepository::class));
+    // The configured name is the fallback; the setting is what an admin edits.
+    $view->share('appName', $c->get(SettingsRepository::class)->string(
+        'site.name',
+        (string) $config->get('app.name')
+    ));
 
     return $view;
 });
@@ -138,4 +178,5 @@ return new Kernel($container, $router, $config, [
     SecurityHeaders::class,
     StartSession::class,
     TrackLastSeen::class,
+    MaintenanceMode::class,
 ]);

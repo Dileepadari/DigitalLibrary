@@ -182,7 +182,9 @@ final class ReviewTest extends DatabaseTestCase
         $this->post('/reviews/' . $id . '/moderate', ['status' => 'hidden', 'reason' => 'Personal abuse.']);
 
         $this->assertSame('hidden', $this->db->scalar('SELECT status FROM reviews WHERE id = ?', [$id]));
-        $this->assertSame('5.00', (string) $this->db->scalar('SELECT rating_average FROM books WHERE id = ?', [$bookId]));
+        $average = (string) $this->db->scalar('SELECT rating_average FROM books WHERE id = ?', [$bookId]);
+
+        $this->assertSame('5.00', $average);
         $this->assertSame(1, (int) $this->db->scalar('SELECT rating_count FROM books WHERE id = ?', [$bookId]));
 
         // The person who wrote it is told, and still sees it.

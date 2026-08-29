@@ -32,6 +32,8 @@ abstract class DatabaseTestCase extends TestCase
 
     /** @var list<string> emptied before each test, children first */
     private const TABLES = [
+        'librarian_applications',
+        'takedowns',
         'user_badges',
         'badges',
         'reputation_events',
@@ -60,6 +62,7 @@ abstract class DatabaseTestCase extends TestCase
         'tag_aliases',
         'tags',
         'categories',
+        'settings',
         'audit_logs',
         'login_attempts',
         'auth_tokens',
@@ -67,11 +70,22 @@ abstract class DatabaseTestCase extends TestCase
         'users',
     ];
 
+    /** The tables those migrations seed. */
+    private const SEEDED_TABLES = ['settings', 'categories', 'tags', 'tag_aliases', 'badges'];
+
+    /** @var array<string, int> the checksum of each seeded table when untouched */
+    private static array $seedChecksums = [];
+
+    /** Whether this process has done its one full reset yet. */
+    private static bool $primed = false;
+
     /** Migrations whose seed rows the tests rely on and the truncate removes. */
     private const SEEDED = [
+        '0001_create_settings_table',
         '0007_create_categories_table',
         '0008_create_tags_table',
         '0016_create_reputation_tables',
+        '0017_create_takedowns_table',
     ];
 
     protected Db $db;
@@ -119,13 +133,58 @@ abstract class DatabaseTestCase extends TestCase
             self::$migrated = true;
         }
 
-        $this->truncate();
-        $this->reseedTaxonomy($container->get(Migrator::class));
+        // The database may hold anything at the start of a run, so the first
+        // test clears the lot and learns what an untouched seed looks like.
+        // After that the reset only touches what a test dirtied.
+        if (!self::$primed) {
+            $this->truncateAll();
+            $this->reseedTaxonomy($container->get(Migrator::class));
+            $this->rememberSeedCounts();
+            self::$primed = true;
+
+            return;
+        }
+
+        $emptied = $this->truncate();
+
+        // Only put the seed data back if the truncate took it away.
+        if (array_intersect($emptied, self::SEEDED_TABLES) !== []) {
+            $this->reseedTaxonomy($container->get(Migrator::class));
+            $this->rememberSeedCounts();
+        }
     }
 
     protected function tearDown(): void
     {
         $this->clearStorage();
+
+        // Put the seed data back before leaving, not only on the way in: the
+        // tests that do not touch the database still read the settings table,
+        // and a test that turned maintenance mode on would close the site for
+        // whatever ran next.
+        if (self::$primed && isset($this->db)) {
+            $moved = false;
+
+            foreach ($this->seedChecksums() as $table => $checksum) {
+                if ((self::$seedChecksums[$table] ?? null) !== $checksum) {
+                    $moved = true;
+
+                    break;
+                }
+            }
+
+            if ($moved) {
+                $this->db->execute('SET FOREIGN_KEY_CHECKS = 0');
+
+                foreach (self::SEEDED_TABLES as $table) {
+                    $this->db->execute('TRUNCATE TABLE `' . $table . '`');
+                }
+
+                $this->db->execute('SET FOREIGN_KEY_CHECKS = 1');
+                $this->reseedTaxonomy($this->kernel()->container()->get(Migrator::class));
+                $this->rememberSeedCounts();
+            }
+        }
 
         parent::tearDown();
     }
@@ -189,7 +248,79 @@ abstract class DatabaseTestCase extends TestCase
             . "trailer<</Root 1 0 R>>\n%%EOF\n";
     }
 
-    private function truncate(): void
+    /**
+     * Empties the tables a test dirtied, and nothing else.
+     *
+     * Truncating all thirty-odd tables and re-running every seed insert cost
+     * more than the tests did. Two round trips ask what changed: an EXISTS per
+     * ordinary table, and a checksum over the seeded ones (a count would miss a
+     * test that changes a setting's value without changing how many there are).
+     *
+     * @return list<string> the tables that were emptied
+     */
+    private function truncate(): array
+    {
+        $checks = [];
+
+        foreach (self::TABLES as $table) {
+            if (!in_array($table, self::SEEDED_TABLES, true)) {
+                $checks[] = "SELECT '{$table}' AS t WHERE EXISTS (SELECT 1 FROM `{$table}`)";
+            }
+        }
+
+        $dirty = array_map(
+            static fn (array $row): string => (string) $row['t'],
+            $this->db->select(implode(' UNION ALL ', $checks))
+        );
+
+        // The seed inserts come from the migrations as a set, so if any seeded
+        // table has moved they all go back together; sorting out which
+        // statement fills which table would be more machinery than it saves.
+        foreach ($this->seedChecksums() as $table => $checksum) {
+            if ((self::$seedChecksums[$table] ?? null) !== $checksum) {
+                $dirty = array_merge($dirty, self::SEEDED_TABLES);
+
+                break;
+            }
+        }
+
+        if ($dirty === []) {
+            return [];
+        }
+
+        $this->db->execute('SET FOREIGN_KEY_CHECKS = 0');
+
+        foreach ($dirty as $table) {
+            $this->db->execute('TRUNCATE TABLE `' . $table . '`');
+        }
+
+        $this->db->execute('SET FOREIGN_KEY_CHECKS = 1');
+
+        return $dirty;
+    }
+
+    /**
+     * A checksum per seeded table, which changes if a row was added, removed or
+     * edited.
+     *
+     * @return array<string, int>
+     */
+    private function seedChecksums(): array
+    {
+        $names = implode(', ', array_map(static fn (string $t): string => '`' . $t . '`', self::SEEDED_TABLES));
+        $checksums = [];
+
+        foreach ($this->db->select('CHECKSUM TABLE ' . $names) as $row) {
+            $table = (string) ($row['Table'] ?? '');
+            $short = substr($table, (int) strrpos($table, '.') + 1);
+            $checksums[$short] = (int) ($row['Checksum'] ?? 0);
+        }
+
+        return $checksums;
+    }
+
+    /** The unconditional reset, used once per process. */
+    private function truncateAll(): void
     {
         $this->db->execute('SET FOREIGN_KEY_CHECKS = 0');
 
@@ -198,6 +329,12 @@ abstract class DatabaseTestCase extends TestCase
         }
 
         $this->db->execute('SET FOREIGN_KEY_CHECKS = 1');
+    }
+
+    /** Remembers what the seed tables look like when untouched. */
+    private function rememberSeedCounts(): void
+    {
+        self::$seedChecksums = $this->seedChecksums();
     }
 
     /**
@@ -410,8 +547,10 @@ abstract class DatabaseTestCase extends TestCase
             $this->post('/logout');
         }
 
-        $response = $this->post('/login', ['email' => $email, 'password' => $password]);
+        $this->post('/login', ['email' => $email, 'password' => $password]);
 
-        $this->assertSame('/', $response->headers()['Location'] ?? null, 'Sign in did not succeed.');
+        // Being signed in is a session with a user id in it. Where the redirect
+        // goes depends on whether something remembered where they were headed.
+        $this->assertArrayHasKey('user_id', $_SESSION, 'Sign in did not succeed for ' . $email . '.');
     }
 }

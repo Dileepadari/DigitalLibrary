@@ -11,6 +11,7 @@ use App\Models\Book;
 use App\Models\User;
 use App\Repositories\BookFileRepository;
 use App\Repositories\BookRepository;
+use App\Repositories\SettingsRepository;
 use App\Support\UploadResult;
 use Smalot\PdfParser\Parser as PdfParser;
 
@@ -49,6 +50,7 @@ final class UploadPipeline
         private readonly BookRepository $books,
         private readonly CoverGenerator $covers,
         private readonly Config $config,
+        private readonly SettingsRepository $settings,
         private readonly Logger $logger,
     ) {
     }
@@ -68,7 +70,12 @@ final class UploadPipeline
         $originalName = (string) ($upload['name'] ?? 'upload');
         $size = (int) $upload['size'];
 
-        $maximum = (int) $this->config->get('storage.max_upload_bytes', 209715200);
+        // The admin setting wins over the environment default, so a limit can be
+        // changed without a deploy.
+        $maximum = (int) $this->settings->get(
+            'uploads.max_bytes',
+            (int) $this->config->get('storage.max_upload_bytes', 209715200)
+        );
 
         if ($size > $maximum) {
             return UploadResult::failed(

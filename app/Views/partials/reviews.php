@@ -11,6 +11,10 @@
 $me = $this->auth->user();
 $stars = static fn (int $rating): string => str_repeat('&#9733;', $rating) . str_repeat('&#9734;', 5 - $rating);
 ?>
+<?php if (!$this->settings->bool('features.reviews', true)) : ?>
+    <?php return; ?>
+<?php endif ?>
+
 <section class="panel" id="reviews">
     <h2>Reviews</h2>
 

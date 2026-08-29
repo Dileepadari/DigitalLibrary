@@ -107,7 +107,9 @@ final class ReputationTest extends DatabaseTestCase
             $this->reputation()->award($user['id'], ReputationAction::ReviewWritten, 'review', $i);
         }
 
-        $this->assertSame(1, (int) $this->db->scalar('SELECT COUNT(*) FROM user_badges WHERE user_id = ?', [$user['id']]));
+        $badges = (int) $this->db->scalar('SELECT COUNT(*) FROM user_badges WHERE user_id = ?', [$user['id']]);
+
+        $this->assertSame(1, $badges);
     }
 
     public function testAHigherBadgeArrivesAtItsThreshold(): void
