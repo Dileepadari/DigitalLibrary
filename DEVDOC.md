@@ -381,12 +381,32 @@ footer line, a review) keep the accent colour and an underline. Structural links
 underline and pick both up on hover. A link that matches no rule falls back to
 the prose style, so a new link is never unstyled.
 
-**The header** is sticky, and holds the six primary destinations, a search box,
-the theme toggle, and everything about the signed in person folded into one
-`<details>` menu. `public/assets/js/menu.js` only adds what `<details>` cannot
-do: close on an outside click and on Escape. Under 62rem the search box is
-dropped and the nav becomes one horizontally scrollable strip rather than a
-hamburger, so every destination stays one tap away and no menu can trap focus.
+**The header** is sticky and deliberately short: the brand, **Browse**, the
+search box, and then the right hand group (add a book, the theme toggle, alerts,
+the account menu, and the overflow menu). Everything else, categories,
+collections, requests, tags, people and the report form, lives behind the
+overflow menu at the right hand end. Browse is what a visitor came for; the rest
+is where to go next.
+
+Under 76rem the search box is dropped (browse has its own), and under 52rem
+Browse joins the overflow menu, so the bar becomes the brand and one button.
+`public/assets/js/menu.js` only adds what `<details>` cannot do on its own:
+close on an outside click and on Escape.
+
+Icons are inline SVG with `stroke: currentColor`, not an icon font and not
+emoji, so they take the text colour and stay crisp. The theme button shows the
+theme it would switch to, and which of its two icons is visible is decided in
+CSS from `data-theme` and `prefers-color-scheme`; the script only keeps the
+`aria-label` honest.
+
+**Browse** puts the filters across the top (search, kind, tag, language, sort)
+and keeps only the category tree in the sidebar. Filters are one form, so
+changing two of them is one round trip, and the active ones appear underneath as
+chips that remove themselves when clicked.
+
+**The footer** is four columns (the library and its tagline, Explore, Take part,
+Language) over a base line. It carries no version number and no PHP version: a
+visitor cannot act on either, and a build is not something a library publishes.
 
 **Components** worth knowing before adding a page: `.panel` (a titled card),
 `.empty` (nothing here yet, said in a way that does not look broken),

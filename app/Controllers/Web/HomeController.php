@@ -14,6 +14,7 @@ use App\Repositories\BookRepository;
 use App\Repositories\BookRequestRepository;
 use App\Repositories\ReadingRepository;
 use App\Repositories\SettingsRepository;
+use App\Repositories\StatisticsRepository;
 use App\Repositories\UserRepository;
 use App\Services\Auth;
 use App\Support\SystemStatus;
@@ -29,6 +30,7 @@ final class HomeController extends Controller
         private readonly BookRepository $books,
         private readonly BookRequestRepository $requests,
         private readonly ReadingRepository $reading,
+        private readonly StatisticsRepository $statistics,
         private readonly Auth $auth,
         private readonly SystemStatus $status,
     ) {
@@ -43,9 +45,9 @@ final class HomeController extends Controller
 
         return $this->render('pages/home', [
             'siteName'    => $this->settings->string('site.name', (string) $this->config->get('app.name')),
-            'status'      => $report,
             'memberCount' => $connected ? $this->users->count() : 0,
             'bookCount'   => $connected ? $this->books->countPublished() : 0,
+            'totals'      => $connected ? $this->statistics->totals() : [],
             'recentBooks' => $connected ? $this->books->recent(8) : [],
             'mostWanted'  => $connected ? $this->requests->mostWanted(5) : [],
             'reading'     => $connected && $this->auth->id() !== null

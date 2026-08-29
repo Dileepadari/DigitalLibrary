@@ -208,6 +208,17 @@ belongs in `routes/web.php` instead. Return through `Response::json()`, reuse
 the repository the HTML page uses rather than writing a second query, and give
 the route a `RateLimit` middleware with a limit that suits how expensive it is.
 
+## Adding a destination to the header
+
+Do not. The bar holds the brand, Browse, the search box and the account
+controls, and that is the whole of it. Anything new goes in the overflow menu at
+the right hand end (`app/Views/partials/header.php`, the `$menu` array), or in
+the footer, or nowhere: a header that grows a link per feature is how a library
+starts looking like a control panel. The same goes for a visitor's page and
+build detail: no version numbers, no environment names, no install checklists.
+Whoever runs the library sees that on the admin dashboard and at
+`/api/v1/health`.
+
 ## Adding a page
 
 Pick one of the four shells in

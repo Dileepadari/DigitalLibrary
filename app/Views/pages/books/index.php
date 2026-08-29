@@ -27,11 +27,61 @@ $with = static fn (string $key, string $value): string
             <input type="search" name="q" value="<?= $this->e($filters['q'] ?? '') ?>"
                    placeholder="Title, author or description" aria-label="Search the catalogue">
 
-            <?php foreach (['category', 'tag', 'type', 'language'] as $carry) : ?>
+            <?php foreach (['category'] as $carry) : ?>
                 <?php if (($filters[$carry] ?? '') !== '') : ?>
                     <input type="hidden" name="<?= $this->e($carry) ?>" value="<?= $this->e($filters[$carry]) ?>">
                 <?php endif ?>
             <?php endforeach ?>
+
+            <?php if ($facets['content_type'] !== []) : ?>
+                <select name="type" aria-label="Kind">
+                    <option value="">Any kind</option>
+                    <?php foreach ($facets['content_type'] as $value => $count) : ?>
+                        <?php $type = ContentType::tryFrom((string) $value) ?>
+                        <option value="<?= $this->e((string) $value) ?>"
+                            <?= ($filters['type'] ?? '') === (string) $value ? 'selected' : '' ?>>
+                            <?= $this->e($type?->label() ?? $value) ?> (<?= (int) $count ?>)
+                        </option>
+                    <?php endforeach ?>
+                </select>
+            <?php endif ?>
+
+            <?php if ($popularTags !== []) : ?>
+                <select name="tag" aria-label="Tag">
+                    <option value="">Any tag</option>
+                    <?php
+                    $tagOptions = $popularTags;
+                    $chosenTag = $filters['tag'] ?? '';
+
+                    // A tag that is filtered on but not popular still has to be
+                    // in the list, or choosing it would clear it.
+                    if ($chosenTag !== '' && !in_array($chosenTag, array_map(
+                        static fn (App\Models\Tag $tag): string => $tag->slug,
+                        $tagOptions
+                    ), true)) {
+                        array_unshift($tagOptions, new App\Models\Tag(0, $chosenTag, $chosenTag, 'active', 0));
+                    }
+                    ?>
+                    <?php foreach ($tagOptions as $tag) : ?>
+                        <option value="<?= $this->e($tag->slug) ?>"
+                            <?= $chosenTag === $tag->slug ? 'selected' : '' ?>>
+                            <?= $this->e($tag->name) ?>
+                        </option>
+                    <?php endforeach ?>
+                </select>
+            <?php endif ?>
+
+            <?php if ($facets['language'] !== []) : ?>
+                <select name="language" aria-label="Language">
+                    <option value="">Any language</option>
+                    <?php foreach ($facets['language'] as $value => $count) : ?>
+                        <option value="<?= $this->e((string) $value) ?>"
+                            <?= ($filters['language'] ?? '') === (string) $value ? 'selected' : '' ?>>
+                            <?= $this->e(strtoupper((string) $value)) ?> (<?= (int) $count ?>)
+                        </option>
+                    <?php endforeach ?>
+                </select>
+            <?php endif ?>
 
             <select name="sort" aria-label="Sort">
                 <?php foreach ([
@@ -71,49 +121,6 @@ $with = static fn (string $key, string $value): string
                 <?php $this->include('partials/category-tree', ['nodes' => $categories]) ?>
             </section>
 
-            <?php if ($facets['content_type'] !== []) : ?>
-                <section>
-                    <h2>Kind</h2>
-                    <ul class="facet-list">
-                        <?php foreach ($facets['content_type'] as $value => $count) : ?>
-                            <?php $type = ContentType::tryFrom((string) $value) ?>
-                            <li>
-                                <a href="<?= $this->e($with('type', (string) $value)) ?>">
-                                    <?= $this->e($type?->label() ?? $value) ?>
-                                </a>
-                                <span class="tree__count"><?= (int) $count ?></span>
-                            </li>
-                        <?php endforeach ?>
-                    </ul>
-                </section>
-            <?php endif ?>
-
-            <?php if ($facets['language'] !== []) : ?>
-                <section>
-                    <h2>Language</h2>
-                    <ul class="facet-list">
-                        <?php foreach ($facets['language'] as $value => $count) : ?>
-                            <li>
-                                <a href="<?= $this->e($with('language', (string) $value)) ?>">
-                                    <?= $this->e(strtoupper((string) $value)) ?>
-                                </a>
-                                <span class="tree__count"><?= (int) $count ?></span>
-                            </li>
-                        <?php endforeach ?>
-                    </ul>
-                </section>
-            <?php endif ?>
-
-            <section>
-                <h2>Tags</h2>
-                <p class="tag-cloud">
-                    <?php foreach ($popularTags as $tag) : ?>
-                        <a class="tag" href="<?= $this->url('tag', ['slug' => $tag->slug]) ?>">
-                            <?= $this->e($tag->name) ?>
-                        </a>
-                    <?php endforeach ?>
-                </p>
-            </section>
         </aside>
 
         <div class="browse__results">

@@ -18,26 +18,27 @@ final class HomePageTest extends TestCase
     }
 
     /**
-     * The install checklist is for whoever has to fix it: an admin, or anyone
-     * at all while something is broken. A healthy public library does not put a
-     * checklist on its front page.
+     * The home page is for readers. Whether the install is healthy is reported
+     * to whoever can act on it, at /api/v1/health and on the admin dashboard,
+     * and never as a checklist on a visitor's front page.
      */
-    public function testTheInstallPanelOnlyShowsWhenSomethingNeedsDoing(): void
+    public function testTheHomePageCarriesNoInstallOrBuildDetail(): void
     {
-        $healthy = json_decode($this->get('/api/v1/health')->body(), true)['ok'] ?? false;
         $body = $this->get('/')->body();
 
-        if ($healthy === true) {
-            $this->assertStringNotContainsString('Install status', $body);
+        $this->assertStringNotContainsString('Install status', $body);
+        $this->assertStringNotContainsString('Migrations', $body);
+        $this->assertStringNotContainsString('MAIL_DRIVER', $body);
+        $this->assertStringNotContainsString(PHP_VERSION, $body);
+        $this->assertStringNotContainsString((string) $this->kernel()->container()->get(
+            \App\Core\Config::class
+        )->get('app.version'), $body);
 
-            return;
-        }
+        // The health endpoint still says everything the panel used to.
+        $health = json_decode($this->get('/api/v1/health')->body(), true);
 
-        $this->assertStringContainsString('Install status', $body);
-
-        foreach (['PHP', 'Database', 'Migrations', 'Storage'] as $check) {
-            $this->assertStringContainsString($check, $body);
-        }
+        $this->assertArrayHasKey('ok', $health);
+        $this->assertArrayHasKey('database', $health);
     }
 
     public function testSecurityHeadersAreApplied(): void

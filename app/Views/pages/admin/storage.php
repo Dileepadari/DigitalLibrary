@@ -29,7 +29,7 @@ $size = static function (int $bytes): string {
     <h1>Storage</h1>
 
     <?php $this->include('partials/admin-nav') ?>
-    <p class="muted">Everything lives under <code><?= $this->e($root) ?></code>, outside the webroot.</p>
+    <p class="muted">Everything is kept outside the webroot, so no file is reachable by its address.</p>
 
     <dl class="status-grid">
         <?php foreach ($usage as $directory => $bytes) : ?>

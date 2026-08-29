@@ -87,12 +87,17 @@ What works today:
 
 One stylesheet, no framework, no build step. Every page is one of four shapes
 (full width, main and aside, filters and results, or a centred card), so the
-library looks like one application rather than thirty pages. The header is
-sticky and holds search, the six main destinations and one account menu; on a
-narrow screen the navigation becomes a scrollable strip instead of a hamburger,
-so nothing is more than a tap away. Covers are generated from page one of a PDF
-when nobody supplied one, and a book with none gets one of six stable tints so a
-shelf of them does not read as one grey block.
+library looks like one application rather than thirty pages. The header carries
+the brand, Browse and the search box, with everything else behind one menu at
+the right; on a narrow screen Browse joins that menu too. Browse puts its
+filters across the top and keeps the category tree at the side. Covers are
+generated from page one of a PDF when nobody supplied one, and a book with none
+gets one of six stable tints so a shelf of them does not read as one grey block.
+
+Nothing on a visitor's page is about the build: no version number, no PHP
+version, no install checklist. The health of an install is reported at
+`/api/v1/health` and on the admin dashboard, where the person who can act on it
+will see it.
 
 ## Roles
 

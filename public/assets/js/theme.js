@@ -43,16 +43,15 @@
             return;
         }
 
-        var label = button.querySelector('[data-theme-icon]') || button;
-
         /*
-         * The two labels are rendered into data attributes by the template, so
-         * they arrive already translated: this file never holds English.
+         * Which icon shows is CSS's job (it follows the theme attribute and the
+         * system preference). The script only keeps the label honest, and the
+         * two labels arrive already translated in data attributes, so this file
+         * never holds English.
          */
         function paint() {
             var dark = current() === 'dark';
 
-            label.textContent = dark ? '\u2600' : '\u263E';
             button.setAttribute('aria-label', button.getAttribute(dark ? 'data-label-light' : 'data-label-dark') || '');
         }
 

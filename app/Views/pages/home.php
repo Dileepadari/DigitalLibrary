@@ -2,9 +2,9 @@
 /**
  * @var App\Core\View $this
  * @var string $siteName
- * @var array<string, mixed> $status
  * @var int $memberCount
  * @var int $bookCount
+ * @var array<string, int> $totals
  * @var list<App\Models\Book> $recentBooks
  * @var list<App\Models\BookRequest> $mostWanted
  * @var list<array<string, mixed>> $reading
@@ -14,9 +14,6 @@ $this->section('title');
 echo $this->e($siteName);
 $this->end();
 
-$check = static fn (bool $ok): string => $ok
-    ? '<span class="pill pill--ok">ready</span>'
-    : '<span class="pill pill--warn">todo</span>';
 ?>
 
 <div class="hero-band">
@@ -45,17 +42,6 @@ $check = static fn (bool $ok): string => $ok
                 <a class="button button--quiet" href="<?= $this->url('requests') ?>"><?= $this->e($this->t('Ask for a book')) ?></a>
             </p>
         <?php endif ?>
-    
-        <dl class="figures">
-            <div>
-                <dt><?= $this->e($this->t('Books')) ?></dt>
-                <dd><?= (int) $bookCount ?></dd>
-            </div>
-            <div>
-                <dt><?= $this->e($this->t('Members')) ?></dt>
-                <dd><?= (int) $memberCount ?></dd>
-            </div>
-        </dl>
     </section>
 
     <?php if ($recentBooks !== []) : ?>
@@ -70,8 +56,35 @@ $check = static fn (bool $ok): string => $ok
                 </span>
             <?php endforeach ?>
         </div>
+
+
     <?php endif ?>
 </div>
+
+<?php
+/*
+ * What the library actually holds, spread across the page rather than stacked
+ * in the corner of the hero.
+ */
+$figures = [
+    ['label' => $this->t('Books'), 'value' => $bookCount, 'note' => $this->t('published and readable')],
+    ['label' => $this->t('Files'), 'value' => (int) ($totals['files'] ?? 0), 'note' => $this->t('PDFs, EPUBs and text')],
+    ['label' => $this->t('Members'), 'value' => $memberCount, 'note' => $this->t('people who joined')],
+    ['label' => $this->t('Collections'), 'value' => (int) ($totals['collections'] ?? 0), 'note' => $this->t('published shelves')],
+    ['label' => $this->t('Requests open'), 'value' => (int) ($totals['open_requests'] ?? 0), 'note' => $this->t('books nobody has added yet')],
+    ['label' => $this->t('Reviews'), 'value' => (int) ($totals['reviews'] ?? 0), 'note' => $this->t('written by members')],
+];
+?>
+<dl class="figures">
+    <?php foreach ($figures as $figure) : ?>
+        <div class="figure">
+            <dd><?= number_format((int) $figure['value']) ?></dd>
+            <dt><?= $this->e($figure['label']) ?></dt>
+            <p class="figure__note"><?= $this->e($figure['note']) ?></p>
+        </div>
+    <?php endforeach ?>
+</dl>
+
 
 <?php if ($recentBooks !== []) : ?>
     <section aria-labelledby="recent-heading">
@@ -83,69 +96,6 @@ $check = static fn (bool $ok): string => $ok
     </section>
 <?php endif ?>
 
-<?php
-/*
- * The install panel is for whoever has to fix it: an admin, or anyone at all
- * while something is actually broken. A working public library does not need a
- * checklist on its front page.
- */
-$showStatus = !$status['ok'] || $this->gate->allows('settings.manage');
-?>
-<?php if ($showStatus) : ?>
-<section class="panel" aria-labelledby="status-heading">
-    <h2 id="status-heading">Install status</h2>
-
-    <dl class="status-grid">
-        <div class="status-item">
-            <dt>PHP <?= $this->e($status['php']['version']) ?></dt>
-            <dd>
-                <?= $check($status['php']['ok']) ?>
-                <?php if ($status['php']['missing_extensions'] !== []) : ?>
-                    <span class="status-item__detail">
-                        missing: <?= $this->e(implode(', ', $status['php']['missing_extensions'])) ?>
-                    </span>
-                <?php endif ?>
-            </dd>
-        </div>
-
-        <div class="status-item">
-            <dt>Database</dt>
-            <dd>
-                <?= $check($status['database']['connected']) ?>
-                <?php if ($status['database']['error'] !== null) : ?>
-                    <span class="status-item__detail"><?= $this->e($status['database']['error']) ?></span>
-                <?php endif ?>
-            </dd>
-        </div>
-
-        <div class="status-item">
-            <dt>Migrations</dt>
-            <dd>
-                <?= $check($status['database']['pending'] === [] && $status['database']['connected']) ?>
-                <span class="status-item__detail">
-                    <?= (int) $status['database']['applied'] ?> applied,
-                    <?= count($status['database']['pending']) ?> pending
-                    <?php if ($status['database']['pending'] !== []) : ?>
-                        - run <code>php cli/console.php migrate</code>
-                    <?php endif ?>
-                </span>
-            </dd>
-        </div>
-
-        <div class="status-item">
-            <dt>Storage</dt>
-            <dd>
-                <?= $check($status['storage']['unwritable'] === []) ?>
-                <?php if ($status['storage']['unwritable'] !== []) : ?>
-                    <span class="status-item__detail">
-                        not writable: <?= $this->e(implode(', ', $status['storage']['unwritable'])) ?>
-                    </span>
-                <?php endif ?>
-            </dd>
-        </div>
-    </dl>
-</section>
-<?php endif ?>
 
 <?php if ($reading !== []) : ?>
     <section aria-labelledby="reading-heading">
