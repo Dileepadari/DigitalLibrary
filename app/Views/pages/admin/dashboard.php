@@ -48,6 +48,8 @@ $sparkline = function (array $series): string {
 <section class="stack-wide">
     <h1>Admin</h1>
 
+    <?php $this->include('partials/admin-nav') ?>
+
     <?php if ($takedowns > 0 || $applications > 0) : ?>
         <p class="banner banner--warn">
             <?php if ($takedowns > 0) : ?>

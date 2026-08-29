@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Support\ModerationStatus;
 use App\Support\ModerationType;
+use App\Support\Timestamp;
 
 final class ModerationRequest
 {
@@ -63,7 +64,7 @@ final class ModerationRequest
     {
         return $this->assigneeId !== null
             && $this->claimedUntil !== null
-            && strtotime($this->claimedUntil) > time();
+            && !Timestamp::isPast($this->claimedUntil);
     }
 
     public function isClaimedBy(?int $userId): bool
@@ -73,6 +74,6 @@ final class ModerationRequest
 
     public function ageInDays(): int
     {
-        return (int) floor((time() - strtotime($this->createdAt)) / 86400);
+        return Timestamp::daysSince($this->createdAt);
     }
 }

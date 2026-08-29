@@ -6,7 +6,7 @@
  */
 ?>
 <?php if ($books === []) : ?>
-    <p class="muted"><?= $this->e($emptyMessage ?? 'Nothing here yet.') ?></p>
+    <p class="empty"><?= $this->e($emptyMessage ?? 'Nothing here yet.') ?></p>
 <?php else : ?>
     <div class="book-grid">
         <?php foreach ($books as $book) : ?>

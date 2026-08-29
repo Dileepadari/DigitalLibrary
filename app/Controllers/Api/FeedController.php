@@ -7,6 +7,7 @@ namespace App\Controllers\Api;
 use App\Core\Config;
 use App\Core\Request;
 use App\Core\Response;
+use App\Support\Timestamp;
 use App\Models\Book;
 use App\Repositories\BookRepository;
 use App\Repositories\SettingsRepository;
@@ -187,12 +188,12 @@ final class FeedController
 
     private function rfc822(string $timestamp): string
     {
-        return gmdate('D, d M Y H:i:s O', strtotime($timestamp) ?: time());
+        return gmdate('D, d M Y H:i:s O', Timestamp::epoch($timestamp) ?: time());
     }
 
     private function rfc3339(string $timestamp): string
     {
-        return gmdate('c', strtotime($timestamp) ?: time());
+        return gmdate('c', Timestamp::epoch($timestamp) ?: time());
     }
 
     private function xmlResponse(string $xml, string $type): Response

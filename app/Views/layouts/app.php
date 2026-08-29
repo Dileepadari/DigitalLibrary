@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="<?= $this->asset('/assets/css/app.css') ?>">
     <!-- Loaded in the head, and not inline, because the CSP forbids inline script. -->
     <script src="<?= $this->asset('/assets/js/theme.js') ?>"></script>
+    <script src="<?= $this->asset('/assets/js/menu.js') ?>" defer></script>
 </head>
 <body>
 <a class="skip-link" href="#main"><?= $this->e($this->t('Skip to content')) ?></a>

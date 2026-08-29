@@ -13,6 +13,8 @@ use App\Core\View;
 use App\Models\ModerationRequest;
 use App\Repositories\BookFileRepository;
 use App\Repositories\BookRepository;
+use App\Repositories\CategoryRepository;
+use App\Repositories\CollectionRepository;
 use App\Repositories\ModerationRepository;
 use App\Services\Auth;
 use App\Services\ModerationService;
@@ -31,6 +33,8 @@ final class QueueController extends Controller
         private readonly ModerationService $moderation,
         private readonly BookRepository $books,
         private readonly BookFileRepository $files,
+        private readonly CollectionRepository $collections,
+        private readonly CategoryRepository $categories,
         private readonly Auth $auth,
     ) {
         parent::__construct($view, $session);
@@ -77,8 +81,23 @@ final class QueueController extends Controller
             }
         }
 
+        /*
+         * A reviewer of a collection or a proposed category needs to see the
+         * thing itself, not only its title in the queue.
+         */
+        $subject = null;
+
+        if ($moderationRequest->subjectId !== null) {
+            $subject = match ($moderationRequest->type) {
+                ModerationType::CollectionPublish => $this->collections->findById($moderationRequest->subjectId),
+                ModerationType::CategoryProposal  => $this->categories->findById($moderationRequest->subjectId),
+                default                           => null,
+            };
+        }
+
         return $this->render('pages/librarian/review', [
             'request'    => $moderationRequest,
+            'subject'    => $subject,
             'book'       => $book,
             'file'       => $file,
             'duplicates' => $duplicates,

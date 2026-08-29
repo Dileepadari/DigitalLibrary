@@ -208,6 +208,23 @@ belongs in `routes/web.php` instead. Return through `Response::json()`, reuse
 the repository the HTML page uses rather than writing a second query, and give
 the route a `RateLimit` middleware with a limit that suits how expensive it is.
 
+## Adding a page
+
+Pick one of the four shells in
+[DEVDOC.md](./DEVDOC.md#the-interface) rather than inventing a layout: full
+width, main and aside, filters and results, or a centred card. Then:
+
+- use the existing components (`.panel`, `.empty`, `.button`, `.tag`,
+  `.banner`, `.table` inside `.table-scroll`) before writing new CSS
+- give every list an empty state, in words, with `.empty`
+- never write `date('j M Y', strtotime($row['created_at']))`. Rows are UTC and
+  the site is not: use `$this->date($row['created_at'])`
+- no inline `<script>`: the CSP silently refuses it. Put JavaScript in
+  `public/assets/js` and load it from the layout
+- run the page past `tests/Feature/AccessibilityTest.php`, which fails on a
+  missing `alt`, an unlabelled control, a missing or duplicated `<h1>`, and a
+  rejected field that does not point at its message
+
 ## What to work on
 
 Issues labelled `good first issue` are scoped to a single file or a single

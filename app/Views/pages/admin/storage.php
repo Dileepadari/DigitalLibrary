@@ -27,6 +27,8 @@ $size = static function (int $bytes): string {
 ?>
 <section class="stack-wide">
     <h1>Storage</h1>
+
+    <?php $this->include('partials/admin-nav') ?>
     <p class="muted">Everything lives under <code><?= $this->e($root) ?></code>, outside the webroot.</p>
 
     <dl class="status-grid">

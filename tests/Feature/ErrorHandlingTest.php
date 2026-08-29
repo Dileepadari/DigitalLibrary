@@ -14,7 +14,8 @@ final class ErrorHandlingTest extends TestCase
 
         $this->assertSame(404, $response->status());
         $this->assertStringContainsString('404', $response->body());
-        $this->assertStringContainsString('Back to the library', $response->body());
+        $this->assertStringContainsString('Browse the library', $response->body());
+        $this->assertStringContainsString('Back to the home page', $response->body());
     }
 
     public function testUnknownApiPathReturnsJson(): void

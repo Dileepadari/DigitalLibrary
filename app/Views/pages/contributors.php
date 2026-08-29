@@ -18,7 +18,7 @@ $this->end();
     </p>
 
     <?php if ($contributors === []) : ?>
-        <p class="muted">Nobody has earned any points yet.</p>
+        <p class="empty">Nobody has earned any points yet.</p>
     <?php else : ?>
         <div class="table-scroll">
             <table class="table">

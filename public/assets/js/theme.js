@@ -45,8 +45,15 @@
 
         var label = button.querySelector('[data-theme-icon]') || button;
 
+        /*
+         * The two labels are rendered into data attributes by the template, so
+         * they arrive already translated: this file never holds English.
+         */
         function paint() {
-            label.textContent = current() === 'dark' ? 'Light mode' : 'Dark mode';
+            var dark = current() === 'dark';
+
+            label.textContent = dark ? '\u2600' : '\u263E';
+            button.setAttribute('aria-label', button.getAttribute(dark ? 'data-label-light' : 'data-label-dark') || '');
         }
 
         paint();

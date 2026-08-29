@@ -32,7 +32,7 @@ $canClose = $isRequester || $this->gate->allows('request.close');
                     by <?= $this->e($request->author) ?> &middot;
                 <?php endif ?>
                 asked by <?= $this->e($request->requesterName ?? 'someone') ?>
-                on <?= $this->e(date('j M Y', strtotime($request->createdAt))) ?>
+                on <?= $this->e($this->date($request->createdAt, 'j M Y')) ?>
                 <?php if ($request->isbn !== null) : ?>
                     &middot; ISBN <?= $this->e($request->isbn) ?>
                 <?php endif ?>
@@ -68,6 +68,18 @@ $canClose = $isRequester || $this->gate->allows('request.close');
                 I can add this book
             </a>
         </p>
+    <?php endif ?>
+
+    <?php if ($me === null && $request->status->isOpen()) : ?>
+        <div class="panel">
+            <h2>Want this too?</h2>
+            <p class="muted">
+                <a href="<?= $this->url('login') ?>">Sign in</a> to upvote this
+                request, or <a href="<?= $this->url('register') ?>">create an
+                account</a> and add the book yourself. Everyone who voted hears
+                when it arrives.
+            </p>
+        </div>
     <?php endif ?>
 
     <?php if ($me !== null && $request->status->isOpen()) : ?>

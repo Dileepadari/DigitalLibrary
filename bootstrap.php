@@ -27,6 +27,7 @@ use App\Middleware\MaintenanceMode;
 use App\Middleware\SecurityHeaders;
 use App\Middleware\SetLocale;
 use App\Middleware\StartSession;
+use App\Middleware\ViewContext;
 use App\Middleware\TrackLastSeen;
 use App\Repositories\ApplicationRepository;
 use App\Repositories\AuditLogRepository;
@@ -201,6 +202,7 @@ return new Kernel($container, $router, $config, [
     SecurityHeaders::class,
     StartSession::class,
     SetLocale::class,
+    ViewContext::class,
     TrackLastSeen::class,
     MaintenanceMode::class,
 ]);

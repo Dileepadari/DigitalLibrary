@@ -13,13 +13,27 @@ final class HomePageTest extends TestCase
         $response = $this->get('/');
 
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('Install status', $response->body());
+        $this->assertStringContainsString('Title, author, or a phrase from inside a book', $response->body());
         $this->assertStringContainsString('text/html', $response->headers()['Content-Type']);
     }
 
-    public function testHomePageReportsEveryStatusCheck(): void
+    /**
+     * The install checklist is for whoever has to fix it: an admin, or anyone
+     * at all while something is broken. A healthy public library does not put a
+     * checklist on its front page.
+     */
+    public function testTheInstallPanelOnlyShowsWhenSomethingNeedsDoing(): void
     {
+        $healthy = json_decode($this->get('/api/v1/health')->body(), true)['ok'] ?? false;
         $body = $this->get('/')->body();
+
+        if ($healthy === true) {
+            $this->assertStringNotContainsString('Install status', $body);
+
+            return;
+        }
+
+        $this->assertStringContainsString('Install status', $body);
 
         foreach (['PHP', 'Database', 'Migrations', 'Storage'] as $check) {
             $this->assertStringContainsString($check, $body);

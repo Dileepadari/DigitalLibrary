@@ -12,6 +12,8 @@ $this->end();
 ?>
 <section class="stack-wide">
     <h1>Audit log</h1>
+
+    <?php $this->include('partials/admin-nav') ?>
     <p class="muted">
         <?= (int) $results['total'] ?> entries. Nothing here is ever edited or
         deleted by the application.
@@ -54,7 +56,7 @@ $this->end();
             <tbody>
             <?php foreach ($results['rows'] as $row) : ?>
                 <tr>
-                    <td><?= $this->e((string) $row['created_at']) ?></td>
+                    <td><?= $this->e($this->date((string) $row['created_at'], 'j M Y, H:i')) ?></td>
                     <td>
                         <?php if (($row['actor_username'] ?? null) !== null) : ?>
                             <a href="<?= $this->url('profile', ['username' => (string) $row['actor_username']]) ?>">

@@ -40,14 +40,14 @@ $this->end();
         </div>
         <div>
             <dt>Joined</dt>
-            <dd><?= $this->e(date('j M Y', strtotime($profile->createdAt))) ?></dd>
+            <dd><?= $this->e($this->date($profile->createdAt, 'j M Y')) ?></dd>
         </div>
         <div>
             <dt>Last seen</dt>
             <dd>
                 <?= $profile->lastSeenAt === null
                     ? 'never'
-                    : $this->e(date('j M Y', strtotime($profile->lastSeenAt))) ?>
+                    : $this->e($this->date($profile->lastSeenAt, 'j M Y')) ?>
             </dd>
         </div>
     </dl>
@@ -62,6 +62,8 @@ $this->end();
         </p>
     <?php endif ?>
 
+    <div class="page-body">
+        <div class="page-main">
     <?php if ($tally !== []) : ?>
         <div class="panel">
             <h2>What they have done</h2>
@@ -75,24 +77,6 @@ $this->end();
                     <?php endif ?>
                 <?php endforeach ?>
             </dl>
-        </div>
-    <?php endif ?>
-
-    <?php if ($collections !== []) : ?>
-        <div class="panel">
-            <h2>Public collections</h2>
-            <ul class="collection-list">
-                <?php foreach ($collections as $collection) : ?>
-                    <li>
-                        <a href="<?= $this->url('collection', ['path' => $collection->relativePath()]) ?>">
-                            <?= $this->e($collection->name) ?>
-                        </a>
-                        <span class="status-item__detail">
-                            <?= (int) $collection->itemCount ?> books
-                        </span>
-                    </li>
-                <?php endforeach ?>
-            </ul>
         </div>
     <?php endif ?>
 
@@ -117,4 +101,27 @@ $this->end();
             <?php endforeach ?>
         </div>
     <?php endif ?>
+        </div>
+
+        <aside class="page-aside">
+    <?php if ($collections !== []) : ?>
+        <div class="panel">
+            <h2>Public collections</h2>
+            <ul class="collection-list">
+                <?php foreach ($collections as $collection) : ?>
+                    <li>
+                        <a href="<?= $this->url('collection', ['path' => $collection->relativePath()]) ?>">
+                            <?= $this->e($collection->name) ?>
+                        </a>
+                        <span class="status-item__detail">
+                            <?= (int) $collection->itemCount ?> book<?= $collection->itemCount === 1 ? '' : 's' ?>
+                        </span>
+                    </li>
+                <?php endforeach ?>
+            </ul>
+        </div>
+    <?php endif ?>
+
+        </aside>
+    </div>
 </section>

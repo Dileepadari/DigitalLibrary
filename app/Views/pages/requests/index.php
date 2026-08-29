@@ -109,7 +109,7 @@ $link = static fn (array $extra): string => '/requests?' . http_build_query(arra
         <?php endforeach ?>
 
         <?php if ($results['rows'] === []) : ?>
-            <p class="muted">Nothing outstanding. Everything anyone asked for is here.</p>
+            <p class="empty">Nothing outstanding. Everything anyone asked for is here.</p>
         <?php endif ?>
     </div>
 

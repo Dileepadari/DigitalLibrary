@@ -4,6 +4,7 @@
  * @var App\Models\ModerationRequest $request
  * @var App\Models\Book|null $book
  * @var App\Models\BookFile|null $file
+ * @var App\Models\Collection|App\Models\Category|null $subject
  * @var list<array{id: int, title: string, slug: string, status: string}> $duplicates
  * @var list<array<string, mixed>> $events
  * @var list<array<string, mixed>> $comments
@@ -36,8 +37,35 @@ $isOwnSubmission = $me !== null && $request->submitterId === $me->id;
         <?php endif ?>
     </p>
 
-    <div class="review">
-        <div class="review__main">
+    <div class="page-body">
+        <div class="page-main">
+            <?php if ($subject !== null) : ?>
+                <div class="panel">
+                    <h2>What is proposed</h2>
+                    <p>
+                        <?php if ($subject instanceof App\Models\Collection) : ?>
+                            <a href="<?= $this->url('collection', ['path' => $subject->relativePath()]) ?>">
+                                <?= $this->e($subject->name) ?>
+                            </a>
+                            <span class="status-item__detail">
+                                <?= (int) $subject->itemCount ?> book<?= $subject->itemCount === 1 ? '' : 's' ?>
+                                here and below
+                            </span>
+                        <?php else : ?>
+                            <a href="<?= $this->url('category', ['path' => $subject->relativePath()]) ?>">
+                                <?= $this->e($subject->name) ?>
+                            </a>
+                            <span class="status-item__detail">
+                                depth <?= (int) $subject->depth ?> &middot; <?= $this->e($subject->path) ?>
+                            </span>
+                        <?php endif ?>
+                    </p>
+                    <?php if (($subject->description ?? null) !== null) : ?>
+                        <p><?= $this->e((string) $subject->description) ?></p>
+                    <?php endif ?>
+                </div>
+            <?php endif ?>
+
             <?php if ($file !== null) : ?>
                 <div class="panel">
                     <h2>The file</h2>
@@ -189,7 +217,7 @@ $isOwnSubmission = $me !== null && $request->submitterId === $me->id;
             ]) ?>
         </div>
 
-        <aside class="review__aside panel">
+        <aside class="page-aside panel">
             <h2>Submitter</h2>
 
             <?php if ($request->submitterName !== null) : ?>

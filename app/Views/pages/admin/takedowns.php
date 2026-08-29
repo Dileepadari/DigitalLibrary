@@ -11,6 +11,8 @@ $this->end();
 ?>
 <section class="stack-wide">
     <h1>Takedown notices</h1>
+
+    <?php $this->include('partials/admin-nav') ?>
     <p class="muted">
         Anyone can send one, with or without an account. Upholding a notice hides
         the book at once; the record and the reason stay either way.
@@ -26,7 +28,7 @@ $this->end();
     </nav>
 
     <?php if ($notices === []) : ?>
-        <p class="muted">Nothing here.</p>
+        <p class="empty">Nothing here.</p>
     <?php endif ?>
 
     <?php foreach ($notices as $notice) : ?>
@@ -48,7 +50,7 @@ $this->end();
                 <?php if (($notice['claimant_role'] ?? null) !== null) : ?>
                     &middot; <?= $this->e((string) $notice['claimant_role']) ?>
                 <?php endif ?>
-                &middot; <?= $this->e((string) $notice['created_at']) ?>
+                &middot; <?= $this->e($this->date((string) $notice['created_at'])) ?>
             </p>
 
             <p><?= nl2br($this->e((string) $notice['basis'])) ?></p>

@@ -45,6 +45,7 @@ What works today:
   kind and language, with counts beside every facet
 - Search finds words **inside** a book, not only in its title and description
 - English and Hindi for the interface, switchable in the footer
+- Light and dark, following the system until you choose, and remembered after
 - A book page with its authors, shelves, tags, licence basis and related reading
 - Add a book: a librarian's goes straight in, a member's waits for review
 - Categories to any depth, tags with approval and aliases, and a librarian screen
@@ -81,6 +82,17 @@ What works today:
   catalogue an e-reader app can browse and download from
 - The install status panel on the home page, `/health`, and the console commands
   in [DEVDOC.md](./DEVDOC.md#console-commands)
+
+## The interface
+
+One stylesheet, no framework, no build step. Every page is one of four shapes
+(full width, main and aside, filters and results, or a centred card), so the
+library looks like one application rather than thirty pages. The header is
+sticky and holds search, the six main destinations and one account menu; on a
+narrow screen the navigation becomes a scrollable strip instead of a hamburger,
+so nothing is more than a tap away. Covers are generated from page one of a PDF
+when nobody supplied one, and a book with none gets one of six stable tints so a
+shelf of them does not read as one grey block.
 
 ## Roles
 

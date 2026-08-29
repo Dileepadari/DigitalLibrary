@@ -20,6 +20,8 @@ $query = static fn (array $extra): string => '?' . http_build_query(array_merge(
 <section class="stack-wide">
     <h1>Users</h1>
 
+    <?php $this->include('partials/admin-nav') ?>
+
     <p class="muted">
         <?= (int) $results['total'] ?> accounts:
         <?php foreach (Role::all() as $role) : ?>
@@ -74,7 +76,7 @@ $query = static fn (array $extra): string => '?' . http_build_query(array_merge(
                             <?= $row->isVerified() ? '' : ' &middot; unconfirmed' ?>
                         </span>
                     </td>
-                    <td><?= $this->e(date('j M Y', strtotime($row->createdAt))) ?></td>
+                    <td><?= $this->e($this->date($row->createdAt, 'j M Y')) ?></td>
                     <td>
                         <?php if ($me !== null && $me->id === $row->id) : ?>
                             <span class="tag tag--role"><?= $this->e($row->role->label()) ?></span>
@@ -144,7 +146,8 @@ $query = static fn (array $extra): string => '?' . http_build_query(array_merge(
     <?php endif ?>
 
     <p class="muted">
-        Role and status changes are written to the audit log. Librarian applications
-        arrive with the moderation queue in M3; until then, promote directly here.
+        Role and status changes are written to the audit log. Someone who applied
+        to be a librarian is decided on the applications screen; this page is for
+        promoting, banning and muting directly.
     </p>
 </section>

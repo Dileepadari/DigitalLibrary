@@ -21,7 +21,7 @@
                 <?php if (($event['note'] ?? null) !== null) : ?>
                     <span class="status-item__detail"><?= $this->e((string) $event['note']) ?></span>
                 <?php endif ?>
-                <span class="status-item__detail"><?= $this->e((string) $event['created_at']) ?></span>
+                <span class="status-item__detail"><?= $this->e($this->date((string) $event['created_at'], 'j M Y, H:i')) ?></span>
             </li>
         <?php endforeach ?>
     </ol>
@@ -38,7 +38,7 @@
         <div class="comment">
             <p class="comment__meta">
                 <strong><?= $this->e((string) ($comment['author_name'] ?? 'someone')) ?></strong>
-                <span class="status-item__detail"><?= $this->e((string) $comment['created_at']) ?></span>
+                <span class="status-item__detail"><?= $this->e($this->date((string) $comment['created_at'], 'j M Y, H:i')) ?></span>
             </p>
             <p><?= nl2br($this->e((string) $comment['body'])) ?></p>
         </div>

@@ -11,6 +11,8 @@ $this->end();
 ?>
 <section class="stack-wide">
     <h1>Site settings</h1>
+
+    <?php $this->include('partials/admin-nav') ?>
     <p class="muted">
         These take effect immediately for everyone. Every change is written to the
         audit log with what it was before.

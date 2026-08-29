@@ -15,8 +15,8 @@ $this->end();
 <section class="stack-wide">
     <h1>Catalogue</h1>
     <p class="muted">
-        Records by status. The moderation queue proper, with claims and canned
-        reasons, arrives with uploads in M3.
+        Every record in the library by status. Uploads waiting on a decision are
+        in the review queue.
     </p>
 
     <nav class="filter-bar">

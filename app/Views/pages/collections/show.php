@@ -126,7 +126,7 @@ $rootAct = $this->url('collection.act', ['id' => $root->id]);
             <h2>Books in <?= $this->e($node->name) ?></h2>
 
             <?php if ($items === []) : ?>
-                <p class="muted">Nothing pinned to this folder yet.</p>
+                <p class="empty">Nothing pinned to this folder yet.</p>
             <?php else : ?>
                 <ol class="item-list">
                     <?php foreach ($items as $item) : ?>
@@ -144,15 +144,18 @@ $rootAct = $this->url('collection.act', ['id' => $root->id]);
                             </div>
 
                             <?php if ($canEdit) : ?>
-                                <form method="post" action="<?= $act ?>" class="inline-form">
+                                <form method="post" action="<?= $act ?>" class="inline-form row-actions">
                                     <?= $this->csrf->field() ?>
                                     <input type="hidden" name="book_id" value="<?= (int) $item['book']->id ?>">
                                     <button type="submit" name="action" value="move-book-up"
-                                            class="link-button" aria-label="Move up">up</button>
+                                            class="button button--small button--quiet"
+                                            aria-label="Move up"><span aria-hidden="true">&uarr;</span></button>
                                     <button type="submit" name="action" value="move-book-down"
-                                            class="link-button" aria-label="Move down">down</button>
+                                            class="button button--small button--quiet"
+                                            aria-label="Move down"><span aria-hidden="true">&darr;</span></button>
                                     <button type="submit" name="action" value="remove-book"
-                                            class="link-button" aria-label="Remove">remove</button>
+                                            class="button button--small button--danger"
+                                            aria-label="Remove from this collection">Remove</button>
                                 </form>
                             <?php endif ?>
                         </li>
@@ -161,7 +164,7 @@ $rootAct = $this->url('collection.act', ['id' => $root->id]);
             <?php endif ?>
 
             <?php if ($canEdit) : ?>
-                <div class="panel">
+                <div class="panel curate">
                     <h2>Curate</h2>
 
                     <form method="post" action="<?= $act ?>" class="stack">
@@ -226,7 +229,7 @@ $rootAct = $this->url('collection.act', ['id' => $root->id]);
 
                     <form method="post" action="<?= $act ?>" class="inline-form">
                         <?= $this->csrf->field() ?>
-                        <button type="submit" name="action" value="delete" class="button button--small button--quiet">
+                        <button type="submit" name="action" value="delete" class="button button--small button--danger">
                             Delete this folder and everything in it
                         </button>
                     </form>

@@ -8,7 +8,8 @@ $this->section('title');
 echo 'Closed for a moment';
 $this->end();
 ?>
-<section class="hero">
+<section class="page-message">
+    <p class="page-message__code">&#9200;</p>
     <h1>Back shortly</h1>
     <p class="hero__tagline"><?= $this->e($message) ?></p>
     <p class="muted">

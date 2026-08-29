@@ -34,7 +34,7 @@ $this->end();
                         </a>
                         <span class="status-item__detail"><?= $this->e($item->type->label()) ?></span>
                     </td>
-                    <td><?= $this->e(date('j M Y', strtotime($item->createdAt))) ?></td>
+                    <td><?= $this->e($this->date($item->createdAt, 'j M Y')) ?></td>
                     <td><span class="tag"><?= $this->e($item->status->label()) ?></span></td>
                     <td class="muted"><?= $this->e((string) $item->reason) ?></td>
                 </tr>

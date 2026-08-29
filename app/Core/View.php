@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Support\Timestamp;
+
 /**
  * Plain PHP templates. A template opts into a layout with $this->layout(...)
  * and fills named slots with $this->section(...) / $this->end(); the layout
@@ -199,6 +201,16 @@ final class View
     public function locale(): string
     {
         return $this->translator?->locale() ?? 'en';
+    }
+
+    /**
+     * A stored timestamp, formatted in the application timezone. Templates must
+     * not call date(strtotime(...)) themselves: the rows are UTC and the
+     * default timezone usually is not.
+     */
+    public function date(?string $timestamp, string $format = 'j M Y'): string
+    {
+        return $timestamp === null || $timestamp === '' ? '' : Timestamp::format($timestamp, $format);
     }
 
     public function config(string $key, mixed $default = null): mixed

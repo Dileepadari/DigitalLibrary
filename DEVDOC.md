@@ -15,6 +15,8 @@ This file describes the code that exists today, at milestones 0 to 9.
 - [Routing](#routing)
 - [Controllers and the container](#controllers-and-the-container)
 - [Views and theming](#views-and-theming)
+- [The interface](#the-interface)
+- [Timestamps](#timestamps)
 - [Auth model](#auth-model)
 - [Permissions](#permissions)
 - [The catalogue](#the-catalogue)
@@ -114,9 +116,9 @@ app/
     Api/           returns JSON and XML: health, the public catalogue, the
                    RSS and OPDS feeds
     Controller.php base class: render, redirect, flash, backWithErrors
-  Middleware/      SecurityHeaders, StartSession, SetLocale, TrackLastSeen,
-                   MaintenanceMode, RateLimit, VerifyCsrf, Authenticate,
-                   RedirectIfAuthenticated, Authorize
+  Middleware/      SecurityHeaders, StartSession, SetLocale, ViewContext,
+                   TrackLastSeen, MaintenanceMode, RateLimit, VerifyCsrf,
+                   Authenticate, RedirectIfAuthenticated, Authorize
   Models/          typed rows, built only by their repositories: User, Book,
                    Author, Category, Tag, BookFile, ModerationRequest,
                    BookRequest, Collection
@@ -131,7 +133,7 @@ app/
                    BookRequestService, CollectionService, CoverGenerator,
                    TextExtractor (words out of a file, for search inside),
                    ReviewService, ReputationService, NotificationService
-  Support/         not framework, not persistence: Role, UserStatus, Password,
+  Support/         not framework, not persistence: Timestamp, Role, UserStatus, Password,
                    AuthResult, ContentType, BookStatus, Licence, Slug,
                    ModerationStatus, ModerationType, RejectionReason,
                    RequestStatus, Visibility, ReputationAction, UploadResult,
@@ -343,10 +345,77 @@ the toggle wins in both directions. `public/assets/js/theme.js` stores the choic
 in `localStorage` under `dl.theme` and is loaded synchronously in `<head>` so the
 attribute is set before first paint.
 
+`View::date()` is the only way a template turns a stored timestamp into words.
+Rows are UTC and the application timezone usually is not, so a bare
+`date('j M Y', strtotime($row))` reads hours away from the truth; see
+[Timestamps](#timestamps).
+
 The ADK DEV mark is a single purple-on-transparent PNG used for the favicon and
 the header badge. It is recoloured per theme with `filter: brightness(0)` in
 light and `brightness(0) invert(1)` in dark (`.logo-mono`), so there is only one
 image file.
+
+## The interface
+
+One stylesheet, `public/assets/css/app.css`, organised as tokens, base, layout,
+components. There is no framework and no build step: a contributor edits the
+file and reloads.
+
+**The page shells.** Every page is one of four shapes, so nothing is a lone
+column of text with empty space beside it:
+
+| Shape | Class | Used by |
+|---|---|---|
+| Full width | `.stack-wide` | lists, tables, admin screens |
+| Main and aside | `.page-body` + `.page-main` + `.page-aside` | profile, review, anything with side facts |
+| Filters and results | `.browse__layout` + `.browse__facets` + `.browse__results` | browse, search, a collection |
+| Centred card | `.form-page` | sign in, register, report, apply |
+
+`.page-body` collapses to one column under 60rem, and also when the aside is
+empty (`:not(:has(.page-aside > *))`), so a page with nothing in the sidebar
+still fills the width.
+
+**Links.** Two kinds, and every link is one of them. Prose links (a sentence, a
+footer line, a review) keep the accent colour and an underline. Structural links
+(navigation, breadcrumbs, trees, cards, table rows) take the text colour with no
+underline and pick both up on hover. A link that matches no rule falls back to
+the prose style, so a new link is never unstyled.
+
+**The header** is sticky, and holds the six primary destinations, a search box,
+the theme toggle, and everything about the signed in person folded into one
+`<details>` menu. `public/assets/js/menu.js` only adds what `<details>` cannot
+do: close on an outside click and on Escape. Under 62rem the search box is
+dropped and the nav becomes one horizontally scrollable strip rather than a
+hamburger, so every destination stays one tap away and no menu can trap focus.
+
+**Components** worth knowing before adding a page: `.panel` (a titled card),
+`.empty` (nothing here yet, said in a way that does not look broken),
+`.button` with `--small`, `--quiet` and `--danger`, `.tag`, `.pill`, `.banner`
+with `--ok`, `--warn` and `--error`, `.table` inside `.table-scroll`,
+`.section-head` (a heading with a link on the right), `.subnav` (the admin
+sections), `.staff-tools` (a `<details>` panel for controls only staff see) and
+`.page-message` (an error page or the closed sign).
+
+## Timestamps
+
+Every datetime in the database is UTC, and `app.timezone` is usually not, so
+parsing a stored value with plain `strtotime()` lands hours away: that bug made
+a live 30 minute review claim look expired the moment it was taken, which hid
+the approve and reject buttons.
+
+`App\Support\Timestamp` is the only correct way to read one:
+
+| Call | Gives |
+|---|---|
+| `Timestamp::epoch($value)` | seconds since the epoch |
+| `Timestamp::format($value, 'j M Y')` | the date in the application timezone |
+| `Timestamp::since($value)` | seconds elapsed |
+| `Timestamp::daysSince($value)` | whole days elapsed |
+| `Timestamp::isPast($value)` | whether the moment has passed |
+
+Templates reach it through `$this->date($timestamp, $format)`.
+`tests/Unit/TimestampTest.php` runs the same assertions under four timezones so
+the bug cannot come back.
 
 ## Auth model
 
@@ -1462,6 +1531,17 @@ schema, `storage/` writable by the web user and outside the webroot, and
   extension by default, and a module served as `text/plain` is refused by the
   browser with a message that does not mention MIME types. The shipped
   `.htaccess` and the nginx snippet above both set it.
+- **Database timestamps are UTC; the application is not.** Never
+  `strtotime($row['created_at'])`. Use `App\Support\Timestamp` in PHP and
+  `$this->date()` in a template. The symptom is subtle: dates are a few hours
+  out, and anything comparing a stored moment with `time()` (a claim, an
+  expiry) is silently wrong.
+- **`.banner` must stay a block.** It carries inline markup, links, `<code>`
+  and sometimes a form; a flex container lays each of those out as its own
+  narrow column. It looked like a rendering bug and it was a CSS one.
+- **Two components may not share a class.** `.review` was both the review page
+  layout and one review in a list, so every review in the book page rendered as
+  a two column grid. The queue page now uses the shared `.page-body` shell.
 - **The rate limiter fails open, on purpose.** A `storage/cache` that is not
   writable does not produce an error; it produces no limiting at all. If the
   limits look like they are not working, check the directory's permissions

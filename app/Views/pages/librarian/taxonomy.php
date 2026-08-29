@@ -19,7 +19,7 @@ $this->end();
         <h2>Waiting for a decision</h2>
 
         <?php if ($pendingCategories === [] && $pendingTags === []) : ?>
-            <p class="muted">Nothing is waiting.</p>
+            <p class="empty">Nothing is waiting.</p>
         <?php endif ?>
 
         <?php foreach ($pendingCategories as $category) : ?>

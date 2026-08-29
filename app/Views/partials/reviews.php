@@ -20,11 +20,16 @@ $stars = static fn (int $rating): string => str_repeat('&#9733;', $rating) . str
 
     <div class="rating-summary">
         <div class="rating-summary__score">
-            <strong><?= $book->ratingCount > 0 ? number_format($book->ratingAverage, 1) : '&ndash;' ?></strong>
-            <span class="rating-stars" aria-hidden="true"><?= $stars((int) round($book->ratingAverage)) ?></span>
-            <span class="status-item__detail">
-                <?= (int) $book->ratingCount ?> review<?= $book->ratingCount === 1 ? '' : 's' ?>
-            </span>
+            <?php if ($book->ratingCount > 0) : ?>
+                <strong><?= number_format($book->ratingAverage, 1) ?></strong>
+                <span class="rating-stars" aria-hidden="true"><?= $stars((int) round($book->ratingAverage)) ?></span>
+                <span class="status-item__detail">
+                    <?= (int) $book->ratingCount ?> review<?= $book->ratingCount === 1 ? '' : 's' ?>
+                </span>
+            <?php else : ?>
+                <strong class="rating-summary__none">Not rated yet</strong>
+                <span class="status-item__detail">Be the first to say what you made of it.</span>
+            <?php endif ?>
         </div>
 
         <?php if ($book->ratingCount > 0) : ?>
@@ -105,7 +110,7 @@ $stars = static fn (int $rating): string => str_repeat('&#9733;', $rating) . str
                     <?= $this->e((string) $review['username']) ?>
                 </a>
                 <span class="status-item__detail">
-                    <?= $this->e(date('j M Y', strtotime((string) $review['created_at']))) ?>
+                    <?= $this->e($this->date((string) $review['created_at'], 'j M Y')) ?>
                     <?php if ($review['status'] !== 'visible') : ?>
                         &middot; hidden: <?= $this->e((string) $review['hidden_reason']) ?>
                     <?php endif ?>

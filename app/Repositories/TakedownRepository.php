@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Core\Db;
+use App\Support\Timestamp;
 
 final class TakedownRepository
 {
@@ -72,6 +73,6 @@ final class TakedownRepository
             return null;
         }
 
-        return (int) floor((time() - strtotime((string) $oldest)) / 86400);
+        return Timestamp::daysSince((string) $oldest);
     }
 }

@@ -105,70 +105,37 @@ $canEdit = $this->gate->allows('book.edit.any')
                 <?php endif ?>
             </div>
 
-            <?php if ($canEdit && $this->gate->allows('book.upload')) : ?>
-                <form method="post" action="<?= $this->url('books.files', ['slug' => $book->slug]) ?>"
-                      enctype="multipart/form-data" class="inline-form">
-                    <?= $this->csrf->field() ?>
-                    <input type="file" name="book_file" required
-                           accept=".pdf,.epub,.mobi,.djvu,.cbz,.txt"
-                           aria-label="File to attach">
-                    <button type="submit" class="button button--small">Attach a file</button>
-                </form>
-                <p class="muted">
-                    <?= $this->gate->allows('book.publish')
-                        ? 'Yours goes straight into the library.'
-                        : 'A librarian reviews it before it appears here.' ?>
-                </p>
-            <?php endif ?>
-
-            <?php if ($this->gate->allows('book.publish')) : ?>
-                <form method="post" action="<?= $this->url('books.status', ['slug' => $book->slug]) ?>"
-                      class="inline-form">
-                    <?= $this->csrf->field() ?>
-                    <select name="status" aria-label="Status">
-                        <?php foreach (BookStatus::all() as $status) : ?>
-                            <option value="<?= $this->e($status->value) ?>"
-                                <?= $book->status === $status ? 'selected' : '' ?>>
-                                <?= $this->e($status->label()) ?>
-                            </option>
-                        <?php endforeach ?>
-                    </select>
-                    <button type="submit" class="button button--small">Set status</button>
-                </form>
-            <?php endif ?>
         </div>
     </div>
 
-    <?php if ($collections !== []) : ?>
-        <section class="panel">
-            <h2>Add to a collection</h2>
-
-            <form method="post" action="<?= $this->url('collections.add') ?>" class="inline-form">
-                <?= $this->csrf->field() ?>
-                <input type="hidden" name="slug" value="<?= $this->e($book->slug) ?>">
-
-                <select name="collection_id" aria-label="Collection">
-                    <?php foreach ($collections as $collection) : ?>
-                        <option value="<?= (int) $collection->id ?>"><?= $this->e($collection->name) ?></option>
-                    <?php endforeach ?>
-                </select>
-
-                <button type="submit" class="button button--small">Add</button>
-            </form>
-            <p class="field__hint">
-                It goes into the top of that collection. Move it into a folder from
-                the collection page.
-            </p>
-        </section>
-    <?php endif ?>
-
+    <div class="book__body">
+        <div class="book__main">
     <?php if ($book->description !== null) : ?>
-        <section class="book__description">
+
+<section class="book__description">
             <h2>About</h2>
             <p><?= nl2br($this->e($book->description)) ?></p>
         </section>
     <?php endif ?>
 
+
+    <?php $this->include('partials/reviews', [
+        'book'         => $book,
+        'reviews'      => $reviews,
+        'mine'         => $mine,
+        'distribution' => $distribution,
+    ]) ?>
+
+
+    <?php if ($related !== []) : ?>
+        <section>
+            <h2>Related</h2>
+            <?php $this->include('partials/book-grid', ['books' => $related, 'emptyMessage' => '']) ?>
+        </section>
+    <?php endif ?>
+        </div>
+
+        <aside class="book__aside">
     <section class="panel">
         <h2>Details</h2>
         <dl class="status-grid">
@@ -211,6 +178,7 @@ $canEdit = $this->gate->allows('book.edit.any')
         <?php endif ?>
     </section>
 
+
     <?php if ($book->categories !== []) : ?>
         <section class="panel">
             <h2>Shelved under</h2>
@@ -226,17 +194,71 @@ $canEdit = $this->gate->allows('book.edit.any')
         </section>
     <?php endif ?>
 
-    <?php $this->include('partials/reviews', [
-        'book'         => $book,
-        'reviews'      => $reviews,
-        'mine'         => $mine,
-        'distribution' => $distribution,
-    ]) ?>
 
-    <?php if ($related !== []) : ?>
-        <section>
-            <h2>Related</h2>
-            <?php $this->include('partials/book-grid', ['books' => $related, 'emptyMessage' => '']) ?>
+    <?php if ($collections !== []) : ?>
+        <section class="panel">
+            <h2>Add to a collection</h2>
+
+            <form method="post" action="<?= $this->url('collections.add') ?>" class="inline-form">
+                <?= $this->csrf->field() ?>
+                <input type="hidden" name="slug" value="<?= $this->e($book->slug) ?>">
+
+                <select name="collection_id" aria-label="Collection">
+                    <?php foreach ($collections as $collection) : ?>
+                        <option value="<?= (int) $collection->id ?>"><?= $this->e($collection->name) ?></option>
+                    <?php endforeach ?>
+                </select>
+
+                <button type="submit" class="button button--small">Add</button>
+            </form>
+            <p class="field__hint">
+                It goes into the top of that collection. Move it into a folder from
+                the collection page.
+            </p>
         </section>
     <?php endif ?>
+
+
+<?php if ($canEdit || $this->gate->allows('book.publish')) : ?>
+    <details class="panel staff-tools">
+        <summary>Librarian tools</summary>
+        <div class="staff-tools__body">
+            <?php if ($canEdit && $this->gate->allows('book.upload')) : ?>
+                <form method="post" action="<?= $this->url('books.files', ['slug' => $book->slug]) ?>"
+                      enctype="multipart/form-data" class="inline-form">
+                    <?= $this->csrf->field() ?>
+                    <input type="file" name="book_file" required
+                           accept=".pdf,.epub,.mobi,.djvu,.cbz,.txt"
+                           aria-label="File to attach">
+                    <button type="submit" class="button button--small">Attach a file</button>
+                </form>
+                <p class="muted">
+                    <?= $this->gate->allows('book.publish')
+                        ? 'Yours goes straight into the library.'
+                        : 'A librarian reviews it before it appears here.' ?>
+                </p>
+            <?php endif ?>
+
+            <?php if ($this->gate->allows('book.publish')) : ?>
+                <form method="post" action="<?= $this->url('books.status', ['slug' => $book->slug]) ?>"
+                      class="inline-form">
+                    <?= $this->csrf->field() ?>
+                    <select name="status" aria-label="Status">
+                        <?php foreach (BookStatus::all() as $status) : ?>
+                            <option value="<?= $this->e($status->value) ?>"
+                                <?= $book->status === $status ? 'selected' : '' ?>>
+                                <?= $this->e($status->label()) ?>
+                            </option>
+                        <?php endforeach ?>
+                    </select>
+                    <button type="submit" class="button button--small">Set status</button>
+                </form>
+            <?php endif ?>
+        </div>
+    </details>
+<?php endif ?>
+
+
+        </aside>
+    </div>
 </article>

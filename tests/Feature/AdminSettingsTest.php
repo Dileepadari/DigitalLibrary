@@ -211,4 +211,26 @@ final class AdminSettingsTest extends DatabaseTestCase
         $this->assertContains($this->get('/health')->status(), [200, 503]);
         $this->assertStringContainsString('"ok"', $this->get('/health')->body());
     }
+
+    /**
+     * A healthy install hides the checklist from visitors, but an admin still
+     * needs it: it is the only place that reports storage and migrations.
+     */
+    public function testAnAdminStillSeesTheInstallPanelOnTheHomePage(): void
+    {
+        $admin = $this->makeUser('boss', 'admin');
+        $member = $this->makeUser('asha');
+
+        $this->signIn($member['email']);
+        $this->assertStringNotContainsString('Install status', $this->get('/')->body());
+
+        $this->signIn($admin['email']);
+        $body = $this->get('/')->body();
+
+        $this->assertStringContainsString('Install status', $body);
+
+        foreach (['PHP', 'Database', 'Migrations', 'Storage'] as $check) {
+            $this->assertStringContainsString($check, $body);
+        }
+    }
 }

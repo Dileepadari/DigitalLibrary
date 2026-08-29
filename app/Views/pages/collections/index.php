@@ -99,7 +99,7 @@ $this->end();
     <h2>Public collections</h2>
 
     <?php if ($results['rows'] === []) : ?>
-        <p class="muted">None yet. The first published collection will be here.</p>
+        <p class="empty">None yet. The first published collection will be here.</p>
     <?php endif ?>
 
     <div class="collection-grid">
@@ -114,7 +114,7 @@ $this->end();
                     <p class="muted"><?= $this->e($collection->description) ?></p>
                 <?php endif ?>
                 <p class="book-card__meta">
-                    <span><?= (int) $collection->itemCount ?> books</span>
+                    <span><?= (int) $collection->itemCount ?> book<?= $collection->itemCount === 1 ? '' : 's' ?></span>
                     <span><?= (int) $collection->followerCount ?> followers</span>
                     <span>by <?= $this->e($collection->ownerName ?? 'someone') ?></span>
                 </p>
