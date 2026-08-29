@@ -3,7 +3,7 @@
  * @var App\Core\View $this
  */
 ?><!doctype html>
-<html lang="<?= $this->e($this->config('app.locale', 'en')) ?>">
+<html lang="<?= $this->e($this->locale()) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,7 +15,7 @@
     <script src="<?= $this->asset('/assets/js/theme.js') ?>"></script>
 </head>
 <body>
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main"><?= $this->e($this->t('Skip to content')) ?></a>
 
 <?php $this->include('partials/header') ?>
 

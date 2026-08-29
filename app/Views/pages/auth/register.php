@@ -23,14 +23,14 @@ $this->end();
 
         <div class="field">
             <label for="name">Name</label>
-            <input type="text" id="name" name="name" value="<?= $this->e($this->old('name')) ?>"
+            <input type="text" id="name" name="name"<?= $this->errorAttributes('name') ?> value="<?= $this->e($this->old('name')) ?>"
                    autocomplete="name" required autofocus>
             <?php $this->include('partials/field-errors', ['field' => 'name']) ?>
         </div>
 
         <div class="field">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" value="<?= $this->e($this->old('username')) ?>"
+            <input type="text" id="username" name="username"<?= $this->errorAttributes('username') ?> value="<?= $this->e($this->old('username')) ?>"
                    autocomplete="username" required>
             <p class="field__hint">Lowercase letters, numbers and hyphens. This is your profile address.</p>
             <?php $this->include('partials/field-errors', ['field' => 'username']) ?>
@@ -38,21 +38,21 @@ $this->end();
 
         <div class="field">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="<?= $this->e($this->old('email')) ?>"
+            <input type="email" id="email" name="email"<?= $this->errorAttributes('email') ?> value="<?= $this->e($this->old('email')) ?>"
                    autocomplete="email" required>
             <?php $this->include('partials/field-errors', ['field' => 'email']) ?>
         </div>
 
         <div class="field">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" autocomplete="new-password" required>
+            <input type="password" id="password" name="password"<?= $this->errorAttributes('password') ?> autocomplete="new-password" required>
             <p class="field__hint">At least 10 characters.</p>
             <?php $this->include('partials/field-errors', ['field' => 'password']) ?>
         </div>
 
         <div class="field">
             <label for="password_confirmation">Confirm password</label>
-            <input type="password" id="password_confirmation" name="password_confirmation"
+            <input type="password" id="password_confirmation" name="password_confirmation"<?= $this->errorAttributes('password_confirmation') ?>
                    autocomplete="new-password" required>
             <?php $this->include('partials/field-errors', ['field' => 'password_confirmation']) ?>
         </div>

@@ -287,16 +287,23 @@ final class BookRepository
         $query = trim((string) ($filters['q'] ?? ''));
 
         if ($query !== '') {
+            // Four ways to match, ORed: the record's own text, a prefix of the
+            // title, an author's name, and the words inside the book itself.
             $where[] = '(MATCH(b.title, b.subtitle, b.description) AGAINST (? IN BOOLEAN MODE)
                 OR b.title LIKE ?
                 OR EXISTS (
                     SELECT 1 FROM book_authors ba
                     INNER JOIN authors a ON a.id = ba.author_id
                     WHERE ba.book_id = b.id AND a.name LIKE ?
+                )
+                OR EXISTS (
+                    SELECT 1 FROM book_texts bt
+                    WHERE bt.book_id = b.id AND MATCH(bt.content) AGAINST (? IN BOOLEAN MODE)
                 ))';
             $bindings[] = self::booleanQuery($query);
             $bindings[] = '%' . $query . '%';
             $bindings[] = '%' . $query . '%';
+            $bindings[] = self::booleanQuery($query);
         }
 
         if (($filters['category'] ?? '') !== '') {

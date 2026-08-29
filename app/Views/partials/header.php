@@ -15,47 +15,47 @@ $unread = $this->notifications->unreadCount($user?->id);
         </a>
 
         <nav class="site-nav" aria-label="Main">
-            <a href="<?= $this->url('books') ?>">Browse</a>
-            <a href="<?= $this->url('categories') ?>">Categories</a>
-            <a href="<?= $this->url('tags') ?>">Tags</a>
+            <a href="<?= $this->url('books') ?>"><?= $this->e($this->t('Browse')) ?></a>
+            <a href="<?= $this->url('categories') ?>"><?= $this->e($this->t('Categories')) ?></a>
+            <a href="<?= $this->url('tags') ?>"><?= $this->e($this->t('Tags')) ?></a>
             <?php if ($this->settings->bool('features.requests', true)) : ?>
-                <a href="<?= $this->url('requests') ?>">Requests</a>
+                <a href="<?= $this->url('requests') ?>"><?= $this->e($this->t('Requests')) ?></a>
             <?php endif ?>
-            <a href="<?= $this->url('collections') ?>">Collections</a>
-            <a href="<?= $this->url('contributors') ?>">People</a>
+            <a href="<?= $this->url('collections') ?>"><?= $this->e($this->t('Collections')) ?></a>
+            <a href="<?= $this->url('contributors') ?>"><?= $this->e($this->t('People')) ?></a>
 
             <?php if ($user !== null) : ?>
                 <?php if ($this->gate->allows('book.upload')) : ?>
-                    <a href="<?= $this->url('books.new') ?>">Add</a>
+                    <a href="<?= $this->url('books.new') ?>"><?= $this->e($this->t('Add')) ?></a>
                 <?php endif ?>
                 <?php if ($this->gate->allows('moderation.queue')) : ?>
-                    <a href="<?= $this->url('queue') ?>">Queue</a>
+                    <a href="<?= $this->url('queue') ?>"><?= $this->e($this->t('Queue')) ?></a>
                 <?php endif ?>
                 <?php if ($this->gate->allows('taxonomy.manage')) : ?>
-                    <a href="<?= $this->url('librarian.books') ?>">Catalogue</a>
+                    <a href="<?= $this->url('librarian.books') ?>"><?= $this->e($this->t('Catalogue')) ?></a>
                 <?php endif ?>
                 <a href="<?= $this->url('notifications') ?>">
-                    Alerts<?php if ($unread > 0) : ?><span class="badge"><?= (int) $unread ?></span><?php endif ?>
+                    <?= $this->e($this->t('Alerts')) ?><?php if ($unread > 0) : ?><span class="badge"><?= (int) $unread ?></span><?php endif ?>
                 </a>
                 <?php if ($this->gate->allows('settings.manage')) : ?>
-                    <a href="<?= $this->url('admin') ?>">Admin</a>
+                    <a href="<?= $this->url('admin') ?>"><?= $this->e($this->t('Admin')) ?></a>
                 <?php endif ?>
                 <a href="<?= $this->url('profile', ['username' => $user->username]) ?>">
                     <?= $this->e($user->username) ?>
                 </a>
-                <a href="<?= $this->url('settings') ?>">Settings</a>
+                <a href="<?= $this->url('settings') ?>"><?= $this->e($this->t('Settings')) ?></a>
                 <form class="inline-form" method="post" action="<?= $this->url('logout') ?>">
                     <?= $this->csrf->field() ?>
-                    <button type="submit" class="link-button">Sign out</button>
+                    <button type="submit" class="link-button"><?= $this->e($this->t('Sign out')) ?></button>
                 </form>
             <?php else : ?>
-                <a href="<?= $this->url('login') ?>">Sign in</a>
-                <a class="button button--small" href="<?= $this->url('register') ?>">Join</a>
+                <a href="<?= $this->url('login') ?>"><?= $this->e($this->t('Sign in')) ?></a>
+                <a class="button button--small" href="<?= $this->url('register') ?>"><?= $this->e($this->t('Join')) ?></a>
             <?php endif ?>
         </nav>
 
         <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark theme">
-            <span data-theme-icon>Theme</span>
+            <span data-theme-icon><?= $this->e($this->t('Theme')) ?></span>
         </button>
     </div>
 </header>

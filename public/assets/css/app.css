@@ -1439,3 +1439,17 @@ input[type="file"] {
     display: block;
     overflow-wrap: anywhere;
 }
+
+/* Language switch (M9) */
+
+.site-footer__languages {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.site-footer__languages a[aria-current="true"] {
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+}

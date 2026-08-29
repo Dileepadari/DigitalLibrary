@@ -29,7 +29,7 @@ $this->end();
 
                 <div class="field">
                     <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required maxlength="120"
+                    <input type="text" id="name" name="name"<?= $this->errorAttributes('name') ?> required maxlength="120"
                            placeholder="UPSC Preparation" value="<?= $this->e($this->old('name')) ?>">
                     <?php $this->include('partials/field-errors', ['field' => 'name']) ?>
                 </div>

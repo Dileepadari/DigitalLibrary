@@ -16,14 +16,14 @@ $this->end();
 
         <div class="field">
             <label for="password">New password</label>
-            <input type="password" id="password" name="password" autocomplete="new-password" required autofocus>
+            <input type="password" id="password" name="password"<?= $this->errorAttributes('password') ?> autocomplete="new-password" required autofocus>
             <p class="field__hint">At least 10 characters.</p>
             <?php $this->include('partials/field-errors', ['field' => 'password']) ?>
         </div>
 
         <div class="field">
             <label for="password_confirmation">Confirm new password</label>
-            <input type="password" id="password_confirmation" name="password_confirmation"
+            <input type="password" id="password_confirmation" name="password_confirmation"<?= $this->errorAttributes('password_confirmation') ?>
                    autocomplete="new-password" required>
             <?php $this->include('partials/field-errors', ['field' => 'password_confirmation']) ?>
         </div>

@@ -68,7 +68,7 @@ if ($prefill) {
 
         <div class="field">
             <label for="title">Title</label>
-            <input type="text" id="title" name="title" required maxlength="255"
+            <input type="text" id="title" name="title"<?= $this->errorAttributes('title') ?> required maxlength="255"
                    value="<?= $this->e($value('title', $prefill ? $titleValue : $book?->title)) ?>">
             <?php $this->include('partials/field-errors', ['field' => 'title']) ?>
         </div>
@@ -81,7 +81,7 @@ if ($prefill) {
 
         <div class="field">
             <label for="authors">Authors</label>
-            <input type="text" id="authors" name="authors" maxlength="500"
+            <input type="text" id="authors" name="authors"<?= $this->errorAttributes('authors') ?> maxlength="500"
                    value="<?= $this->e($value('authors', $authorValue)) ?>">
             <p class="field__hint">Comma separated. New names are created as you type them.</p>
             <?php $this->include('partials/field-errors', ['field' => 'authors']) ?>
@@ -184,7 +184,7 @@ if ($prefill) {
 
         <div class="field">
             <label for="licence">Licence basis</label>
-            <select id="licence" name="licence" required>
+            <select id="licence" name="licence"<?= $this->errorAttributes('licence') ?> required>
                 <?php foreach (Licence::all() as $licence) : ?>
                     <option value="<?= $this->e($licence->value) ?>"
                         <?= ($book?->licence ?? Licence::Unknown) === $licence ? 'selected' : '' ?>>
@@ -207,7 +207,7 @@ if ($prefill) {
 
         <div class="field">
             <label for="source_url">Source URL</label>
-            <input type="url" id="source_url" name="source_url" maxlength="500"
+            <input type="url" id="source_url" name="source_url"<?= $this->errorAttributes('source_url') ?> maxlength="500"
                    value="<?= $this->e($value('source_url', $book?->sourceUrl)) ?>">
             <?php $this->include('partials/field-errors', ['field' => 'source_url']) ?>
         </div>

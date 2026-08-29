@@ -31,14 +31,14 @@ $this->end();
 
         <div class="field">
             <label for="claimant_name">Your name</label>
-            <input type="text" id="claimant_name" name="claimant_name" required maxlength="160"
+            <input type="text" id="claimant_name" name="claimant_name"<?= $this->errorAttributes('claimant_name') ?> required maxlength="160"
                    value="<?= $this->e($this->old('claimant_name')) ?>">
             <?php $this->include('partials/field-errors', ['field' => 'claimant_name']) ?>
         </div>
 
         <div class="field">
             <label for="claimant_email">Your email</label>
-            <input type="email" id="claimant_email" name="claimant_email" required maxlength="191"
+            <input type="email" id="claimant_email" name="claimant_email"<?= $this->errorAttributes('claimant_email') ?> required maxlength="191"
                    value="<?= $this->e($this->old('claimant_email')) ?>">
             <p class="field__hint">The only place the outcome is sent.</p>
             <?php $this->include('partials/field-errors', ['field' => 'claimant_email']) ?>
@@ -54,7 +54,7 @@ $this->end();
         <?php if ($book === null) : ?>
             <div class="field">
                 <label for="subject_url">Address of the page</label>
-                <input type="text" id="subject_url" name="subject_url" maxlength="500"
+                <input type="text" id="subject_url" name="subject_url"<?= $this->errorAttributes('subject_url') ?> maxlength="500"
                        value="<?= $this->e($this->old('subject_url')) ?>">
                 <?php $this->include('partials/field-errors', ['field' => 'subject_url']) ?>
             </div>
@@ -62,7 +62,7 @@ $this->end();
 
         <div class="field">
             <label for="basis">What is wrong</label>
-            <textarea id="basis" name="basis" rows="5" required maxlength="2000"><?=
+            <textarea id="basis" name="basis"<?= $this->errorAttributes('basis') ?> rows="5" required maxlength="2000"><?=
                 $this->e($this->old('basis'))
             ?></textarea>
             <p class="field__hint">

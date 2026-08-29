@@ -86,7 +86,9 @@ final class LibrarianApplicationTest extends DatabaseTestCase
         $this->post('/admin/applications/' . $id, ['decision' => 'approve']);
 
         $this->assertSame('librarian', $this->db->scalar('SELECT role FROM users WHERE id = ?', [$member['id']]));
-        $this->assertSame('approved', $this->db->scalar('SELECT status FROM librarian_applications WHERE id = ?', [$id]));
+        $status = $this->db->scalar('SELECT status FROM librarian_applications WHERE id = ?', [$id]);
+
+        $this->assertSame('approved', $status);
         $this->assertSame(
             1,
             (int) $this->db->scalar(
@@ -116,7 +118,9 @@ final class LibrarianApplicationTest extends DatabaseTestCase
         $this->post('/admin/applications/' . $id, ['decision' => 'reject']);
 
         $this->assertSame('member', $this->db->scalar('SELECT role FROM users WHERE id = ?', [$member['id']]));
-        $this->assertSame('rejected', $this->db->scalar('SELECT status FROM librarian_applications WHERE id = ?', [$id]));
+        $status = $this->db->scalar('SELECT status FROM librarian_applications WHERE id = ?', [$id]);
+
+        $this->assertSame('rejected', $status);
 
         // And they can apply again.
         $this->signIn($member['email']);

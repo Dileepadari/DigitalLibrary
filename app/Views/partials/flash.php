@@ -7,7 +7,9 @@ $error = $this->flash('error');
 $user = $this->auth->user();
 ?>
 <?php if (is_string($success) && $success !== '') : ?>
-    <div class="container"><p class="banner banner--ok" role="status"><?= $this->e($success) ?></p></div>
+    <div class="container">
+        <p class="banner banner--ok" role="status" aria-live="polite"><?= $this->e($success) ?></p>
+    </div>
 <?php endif ?>
 
 <?php if (is_string($error) && $error !== '') : ?>

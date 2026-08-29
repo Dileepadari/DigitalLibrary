@@ -5,7 +5,7 @@ data access, security model and setup. For what the app does from a user's point
 of view, see [README.md](./README.md). For the design of the features that are
 not built yet, see [PLAN.md](./PLAN.md).
 
-This file describes the code that exists today, at milestones 0 to 8.
+This file describes the code that exists today, at milestones 0 to 9.
 
 ## Table of contents
 
@@ -24,6 +24,10 @@ This file describes the code that exists today, at milestones 0 to 8.
 - [Reading](#reading)
 - [Reviews and reputation](#reviews-and-reputation)
 - [Running the library](#running-the-library)
+- [The public API and feeds](#the-public-api-and-feeds)
+- [Rate limiting](#rate-limiting)
+- [Translations](#translations)
+- [Accessibility](#accessibility)
 - [Data access](#data-access)
 - [Data model](#data-model)
 - [Migrations](#migrations)
@@ -97,8 +101,8 @@ apart. Anything thrown out of a controller is caught by the Kernel: an
 app/
   Core/            the framework: Kernel, Router, Route, Request, Response,
                    Container, Pipeline, View, Session, Csrf, Validator, Db,
-                   Migrator, Mailer, Config, Env, Logger, Autoloader,
-                   HttpException
+                   Migrator, Mailer, Config, Env, Logger, RateLimiter,
+                   Translator, Storage, Autoloader, HttpException
   Controllers/
     Web/           returns HTML (home, profile, settings, books, categories,
                    tags, requests, collections, uploads, downloads, covers,
@@ -107,10 +111,11 @@ app/
     Librarian/     the moderation queue, the catalogue list, the taxonomy screen
     Admin/         the admin area: dashboard, settings, audit, storage,
                    takedowns, librarian applications, users
-    Api/           returns JSON
+    Api/           returns JSON and XML: health, the public catalogue, the
+                   RSS and OPDS feeds
     Controller.php base class: render, redirect, flash, backWithErrors
-  Middleware/      SecurityHeaders, StartSession, TrackLastSeen,
-                   MaintenanceMode, VerifyCsrf, Authenticate,
+  Middleware/      SecurityHeaders, StartSession, SetLocale, TrackLastSeen,
+                   MaintenanceMode, RateLimit, VerifyCsrf, Authenticate,
                    RedirectIfAuthenticated, Authorize
   Models/          typed rows, built only by their repositories: User, Book,
                    Author, Category, Tag, BookFile, ModerationRequest,
@@ -124,6 +129,7 @@ app/
                    BookService (create and edit a record), TaxonomyService,
                    UploadPipeline (bytes in), ModerationService (the queue),
                    BookRequestService, CollectionService, CoverGenerator,
+                   TextExtractor (words out of a file, for search inside),
                    ReviewService, ReputationService, NotificationService
   Support/         not framework, not persistence: Role, UserStatus, Password,
                    AuthResult, ContentType, BookStatus, Licence, Slug,
@@ -140,6 +146,7 @@ config/            app, database, storage, mail
 database/
   migrations/      NNNN_name.sql, applied in filename order
   seeds/books.php  public domain records for `db:seed`
+resources/lang/    one file per language, keyed by the English string
 public/            webroot: index.php, .htaccess, assets
   assets/img/logo-mark.png   the ADK DEV mark, used as favicon and in the header
 routes/            web.php and api.php, each returning a closure over the Router
@@ -407,8 +414,8 @@ Rough shape of the three roles: a member may read, request and contribute
 
 A `book` is the bibliographic record. A `book_file` is a downloadable artefact
 attached to it, so one book carries a scanned PDF, a clean PDF and an EPUB under
-one set of metadata. The files table exists and is read by the model; nothing
-writes to it until the upload pipeline lands in M3.
+one set of metadata. Only the upload pipeline writes to `book_files`; a
+controller never inserts one directly.
 
 `BookRepository` hydrates lists in batches: one query for the books, then one
 each for authors, categories, tags and files across all of them. A page of 24
@@ -424,9 +431,10 @@ slug is in every link that already exists to it.
 
 ### Search
 
-MySQL FULLTEXT in boolean mode over `title`, `subtitle` and `description`, OR a
-`LIKE` on the title, OR an `EXISTS` against the author names. The three are ORed
-together on purpose:
+Four clauses ORed together: MySQL FULLTEXT in boolean mode over `title`,
+`subtitle` and `description`, a `LIKE` on the title, an `EXISTS` against the
+author names, and an `EXISTS` against `book_texts`, which is the text inside the
+book itself. Each one is there for a reason:
 
 - FULLTEXT gives relevance ranking and prefix matching, but ignores words shorter
   than `innodb_ft_min_token_size` (three characters by default), so "Ox" or "AI"
@@ -436,13 +444,26 @@ together on purpose:
   hyphen does not silently become a negation.
 - The author clause is why searching "darwin" finds *On the Origin of Species*
   even though the word appears nowhere in the record's own text.
+- The `book_texts` clause is search inside books. It matches a phrase that
+  appears on page 300 and nowhere in the metadata, which is the difference
+  between a catalogue and a library. It is scoped to files that are published:
+  the join goes through `book_id`, and a quarantined file has no book to join
+  to.
+
+`book_texts` is filled by `TextExtractor`, which the upload pipeline calls when a
+file arrives and `search:reindex` calls when the index has to be rebuilt. It
+stores at most 60,000 characters per book. That is a deliberate ceiling: enough
+that a search finds the book, small enough that the index does not become a
+second copy of the library. A PDF with no text layer contributes nothing and is
+flagged as a scan on the record.
 
 Facet counts come from the same WHERE clause as the results, minus the facet
 being counted, so choosing "Comics" still shows how many books the other kinds
 would give you.
 
-`book_texts` holds extracted full text with its own FULLTEXT index. It is
-populated by the upload pipeline in M3 and is not read yet.
+`book_texts` holds extracted full text with its own FULLTEXT index. The upload
+pipeline fills it, `search:reindex` rebuilds it, and search reads it (see
+[Search](#search)).
 
 ### Categories
 
@@ -815,6 +836,99 @@ time to a decision, how many have waited over a week). There is no analytics
 pipeline and there does not need to be one until a library is large enough for
 these to hurt.
 
+## The public API and feeds
+
+`routes/api.php` holds every machine-readable route: no session cookie is
+required, no CSRF token is checked, and nothing writes. Everything it returns is
+what a guest can already read on the website, so there is no token to issue and
+nothing an API key would protect. If a route ever needs an account behind it, it
+does not belong in this file.
+
+| Route | Returns |
+|---|---|
+| `GET /api/v1/health` | `SystemStatus::report()`, 200 when healthy and 503 when not |
+| `GET /api/v1/books` | paginated books, honouring the same filters as `/books` |
+| `GET /api/v1/books/{slug}` | one book with authors, categories, tags and files |
+| `GET /api/v1/categories` | the category tree, flattened, with subtree counts |
+| `GET /api/v1/tags` | approved tags with their book counts |
+| `GET /feed.rss` | the twenty newest books, RSS 2.0 |
+| `GET /opds` | the same, as an OPDS 1.2 acquisition feed |
+
+`CatalogueController` reuses `BookRepository` and the same filter parsing as the
+HTML listing, so a query string that works on `/books` works on `/api/v1/books`.
+Only published books are ever visible; the repository's visibility clause is not
+optional and there is no parameter that turns it off.
+
+Both feeds are assembled as strings, and every interpolated value goes through
+`FeedController::xml()`, which is `htmlspecialchars` with `ENT_XML1`. A title
+containing an ampersand is a matter of when, not if, and an unescaped one breaks
+the whole document rather than one entry. OPDS is what makes the
+library appear as a browsable catalogue inside an e-reader app: it is Atom with
+`acquisition` link relations pointing at the same download route the website
+uses, so a download still goes through the permission check and still counts.
+
+## Rate limiting
+
+`App\Middleware\RateLimit` is declared on a route as
+`App\Middleware\RateLimit:120` for a hundred and twenty a minute. Signed-in
+callers are counted by account, everyone else by a hash of the IP, so one office
+behind one address does not lock out the rest of it. Over the limit is a 429 with
+`Retry-After`; under it, every response carries `X-RateLimit-Limit` and
+`X-RateLimit-Remaining`.
+
+The counters are files under `storage/cache`, one per caller per window, guarded
+by `flock`. There is no table: a limiter that writes to the database on every
+request costs more than the requests it is protecting, and losing the counters on
+a restart is harmless. **It fails open.** If the counter file cannot be opened,
+the request is allowed through, because a disk problem should not take the
+catalogue offline.
+
+## Translations
+
+`App\Core\Translator` reads `resources/lang/<locale>.php`, a flat array. **The
+key is the English string**, not a dotted path:
+
+```php
+<?php echo $this->t('Browse the library'); ?>
+```
+
+A missing translation renders as readable English instead of `nav.browse`, and a
+template nobody has touched yet still says something sensible. `View::t()` is the
+only way a template reaches the translator.
+
+`SetLocale` middleware picks the language: `?lang=hi` sets it, the session
+remembers it, and the site default applies otherwise. `Accept-Language` is
+deliberately ignored, because guessing from the browser and being wrong is worse
+than being predictable when the switcher is one click away in the footer. The
+same middleware shares `localeLinks` with the view: one switcher link per
+language pointing at the current path with the current query string, so changing
+language halfway through a filtered search keeps the search.
+
+**Scope: the interface chrome, not the content.** `en` and `hi` cover navigation,
+buttons, form labels, validation messages and flash messages. Book titles,
+descriptions and reviews are shown as they were written, because a library's
+catalogue is not the sort of thing a translation table should be rewriting. A
+string only becomes translatable once it has been moved through `t()`, so adding
+a language means adding a file, but making a page translatable means editing that
+page.
+
+## Accessibility
+
+Not a separate feature so much as a set of rules the templates follow, with
+`tests/Feature/AccessibilityTest.php` there to keep them followed:
+
+- every page declares its language and starts with a skip link to `#main`
+- exactly one `<h1>` per page
+- every `<img>` has `alt`; decorative images use `alt=""`
+- every form control has a label, an `aria-label` or an `aria-labelledby`
+- a rejected field gets `aria-invalid="true"` and `aria-describedby` pointing at
+  the message, which `View::errorAttributes()` emits so the nine forms cannot
+  drift apart
+- flash messages and the reader's position indicator are `role="status"` with
+  `aria-live="polite"`, so a change is announced without stealing focus
+- the current navigation item carries `aria-current="page"`
+- data tables have `<th scope="col">`
+
 ## Data access
 
 `App\Core\Db` wraps PDO with `ERRMODE_EXCEPTION`, `FETCH_ASSOC` and emulated
@@ -1050,7 +1164,8 @@ the grace window.
 
 - **Sessions**: cookie is `HttpOnly`, `SameSite=Lax`, `Secure` when
   `APP_FORCE_HTTPS=true`. Name and lifetime come from config.
-  `Session::regenerate()` exists for privilege changes in M1.
+  `Session::regenerate()` is called on sign in and on sign out, so a fixated id
+  is worthless.
 - **CSRF**: `VerifyCsrf` runs on every non-GET/HEAD/OPTIONS request in
   `routes/web.php` and rejects with 419. The token comes from `Csrf::field()` in
   a form, or the `X-CSRF-Token` header for fetch. Comparison is `hash_equals`.
@@ -1067,9 +1182,11 @@ the grace window.
   exception message, file and stack trace.
 
 - **Authentication and authorisation**: see [Auth model](#auth-model) and
-  [Permissions](#permissions). Sign-in attempts are throttled; nothing else is
-  rate limited yet, which matters most for the password reset form and is worth
-  fixing when the upload endpoints land in M3.
+  [Permissions](#permissions). Sign-in attempts are throttled by account and by
+  IP, and the public API and feeds are behind
+  [rate limiting](#rate-limiting). Uploads are bounded by a per-account quota
+  rather than by a request counter, because one large upload is the expensive
+  case, not many small requests.
 - **What a page may show**: a profile prints a name, username, role, bio and
   dates. Email addresses appear only on the owner's own settings page and in the
   admin user list.
@@ -1091,6 +1208,7 @@ php cli/console.php <command>
 | `catalogue:recount` | recalculate the category and tag counters |
 | `quarantine:prune` | delete rejected uploads older than `storage.quarantine_days` |
 | `storage:verify` | check every stored file exists and still hashes to its recorded SHA-256; exits 1 if not |
+| `search:reindex` | re-read the text inside every published PDF and TXT and rebuild `book_texts` |
 | `covers:generate [n]` | render page one of PDFs whose record has no cover; names the renderer it found |
 | `key:generate` | write a new `APP_KEY` into `.env` |
 | `user:promote <email> <role>` | set a role: member, librarian or admin. The way back in if you lock yourself out |
@@ -1119,7 +1237,7 @@ config value is printed into a page except `app.name`, `app.tagline` and
 | `APP_DEBUG` | true | shows exceptions on the error page. Set false in production |
 | `APP_URL` | http://localhost:8000 | absolute URLs in emails and feeds |
 | `APP_TIMEZONE` | Asia/Kolkata | display timezone; storage is always UTC |
-| `APP_LOCALE` | en | `<html lang>`, and the language files from M9 |
+| `APP_LOCALE` | en | the default language, and the `resources/lang` file to load |
 | `APP_FORCE_HTTPS` | false | secure session cookie and HSTS |
 | `SESSION_NAME` | dl_session | session cookie name |
 | `SESSION_LIFETIME` | 7200 | session cookie lifetime in seconds |
@@ -1212,13 +1330,18 @@ the seed data.
 Deliberately not covered: browser behaviour such as the theme toggle, and SMTP
 delivery (the tests read the log driver's output instead).
 
-Two tests are lints in disguise. `HomePageTest::testTheLayoutHasNoInlineScript`
+Four tests are lints in disguise. `HomePageTest::testTheLayoutHasNoInlineScript`
 fails if a template grows an inline `<script>`, because the CSP would silently
 stop it from running in the browser. `RoutesTest` walks every registered route
 and asserts the controller class, the method and the middleware all exist, and
 that every named route can build its URL: `Foo::class` in a file missing its
 `use Foo;` evaluates to the string `"Foo"` with no error, and without that test
 the first sign of it is a 500 in production.
+`LocaleTest::testEveryLocaleFileCarriesTheSameKeys` fails when a language file
+gains or loses a key, so `en.php` stays the list of what is translatable.
+`AccessibilityTest` walks the main pages and fails on an image with no `alt`, a
+control with no label, a page with no `<h1>` or two, a rejected field that does
+not point at its message, and a table without header cells.
 
 ## Continuous integration
 
@@ -1339,6 +1462,18 @@ schema, `storage/` writable by the web user and outside the webroot, and
   extension by default, and a module served as `text/plain` is refused by the
   browser with a message that does not mention MIME types. The shipped
   `.htaccess` and the nginx snippet above both set it.
+- **The rate limiter fails open, on purpose.** A `storage/cache` that is not
+  writable does not produce an error; it produces no limiting at all. If the
+  limits look like they are not working, check the directory's permissions
+  before reading the middleware.
+- **`t()` is not automatic.** A string is English until somebody wraps it in
+  `t()` and adds a line to `resources/lang/hi.php`. Switching to Hindi on a page
+  whose strings were never wrapped shows English, which is correct behaviour and
+  not a bug in the translator.
+- **Search inside books only sees what was extracted.** A scanned PDF with no
+  text layer contributes nothing to `book_texts`, so it is findable by title and
+  author and by nothing else. `search:reindex` cannot fix that; only OCR could,
+  and there is none.
 - **JSON settings keep their quotes.** `settings.value` is a JSON column, so the
   string setting `site.name` is stored as `"Digital Library"` including the
   quotes, and reading it means `json_decode`. Forgetting that gets you a site

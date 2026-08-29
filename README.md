@@ -15,13 +15,13 @@ For the full design and the road to it, see **[PLAN.md](./PLAN.md)**.
 
 ## Where the project is
 
-Milestones 0 to 8 are complete: the application core, accounts with the three
-roles and a real permission system, the catalogue, uploads with the review queue
-behind them, book requests, collections, reading in the browser, the community
-layer of reviews, reputation and badges, and the admin surface that runs it. A member can ask for a book, upvote what someone
-else asked for, add a book and attach a file; a librarian reviews it; approving
-it publishes the file and tells everyone who wanted it. Files can be read in the
-browser or downloaded.
+All nine milestones are complete. The library has accounts with three roles and
+a real permission system, a catalogue with categories and tags, uploads with a
+review queue behind them, book requests, collections, an in-browser reader,
+reviews and reputation, an admin surface, and a public API with feeds. A member
+can ask for a book, upvote what someone else asked for, add a book and attach a
+file; a librarian reviews it; approving it publishes the file and tells everyone
+who wanted it. Files can be read in the browser or downloaded.
 
 | Milestone | What it adds | State |
 |---|---|---|
@@ -34,7 +34,7 @@ browser or downloaded.
 | M6 Reading | PDF and EPUB readers, reading progress, bookmarks | done |
 | M7 Community | reviews, ratings, reputation, badges, the contributor board | done |
 | M8 Admin | settings, audit log viewer, storage dashboard, analytics, takedowns, librarian applications | done |
-| M9 Polish | full text search, public API, OPDS and RSS, Hindi, accessibility | next |
+| M9 Polish | search inside books, public API, OPDS and RSS, Hindi chrome, accessibility | done |
 
 What works today:
 
@@ -43,6 +43,8 @@ What works today:
 - Roles and 30 permissions, checked on every route that needs one
 - Browse and search the catalogue by title, author, description, category, tag,
   kind and language, with counts beside every facet
+- Search finds words **inside** a book, not only in its title and description
+- English and Hindi for the interface, switchable in the footer
 - A book page with its authors, shelves, tags, licence basis and related reading
 - Add a book: a librarian's goes straight in, a member's waits for review
 - Categories to any depth, tags with approval and aliases, and a librarian screen
@@ -75,6 +77,8 @@ What works today:
 - An admin user list with search and filters, role changes, bans and timed mutes
 - An audit log recording registrations, sign-ins, role and status changes, and
   every catalogue and taxonomy decision
+- A read-only JSON API at `/api/v1`, an RSS feed of new arrivals, and an OPDS
+  catalogue an e-reader app can browse and download from
 - The install status panel on the home page, `/health`, and the console commands
   in [DEVDOC.md](./DEVDOC.md#console-commands)
 
@@ -92,8 +96,7 @@ without promoting them.
 | **Admin** | everything a librarian can, plus approve librarian applications, manage users and roles, site settings, takedowns, the audit log and storage |
 
 A member becomes a librarian by applying; only an admin can approve the
-application. Applications themselves arrive with the moderation queue in M3;
-until then an admin promotes people directly from the user list.
+application. An admin can also promote someone directly from the user list.
 
 **The first account registered on a fresh install becomes the admin**, already
 confirmed. An install with no admin could never promote anyone, so someone has to

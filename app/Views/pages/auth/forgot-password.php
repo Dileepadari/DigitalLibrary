@@ -16,7 +16,7 @@ $this->end();
 
         <div class="field">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="<?= $this->e($this->old('email')) ?>"
+            <input type="email" id="email" name="email"<?= $this->errorAttributes('email') ?> value="<?= $this->e($this->old('email')) ?>"
                    autocomplete="email" required autofocus>
             <?php $this->include('partials/field-errors', ['field' => 'email']) ?>
         </div>

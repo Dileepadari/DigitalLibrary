@@ -19,6 +19,7 @@ use App\Repositories\BookRepository;
 use App\Repositories\CategoryRepository;
 use App\Repositories\LoginAttemptRepository;
 use App\Services\CoverGenerator;
+use App\Services\TextExtractor;
 use App\Repositories\TagRepository;
 use App\Repositories\UserRepository;
 use App\Support\Role;
@@ -247,6 +248,38 @@ try {
 
             break;
 
+        case 'search:reindex':
+            $storage = $container->get(Storage::class);
+            $files = $container->get(BookFileRepository::class);
+            $extractor = $container->get(TextExtractor::class);
+            $indexed = 0;
+            $skipped = 0;
+
+            foreach ($files->all() as $file) {
+                $format = pathinfo($file['storage_path'], PATHINFO_EXTENSION);
+
+                if (!in_array($format, ['pdf', 'txt'], true) || $file['status'] !== 'published') {
+                    $skipped++;
+
+                    continue;
+                }
+
+                $extracted = $extractor->fromFile($storage->absolute($file['storage_path']), $format);
+
+                if ($extracted['text'] === null) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                $files->storeTextForFile($file['id'], $extracted['text']);
+                $indexed++;
+            }
+
+            out(sprintf('%d file(s) indexed, %d skipped (no text, or not published).', $indexed, $skipped));
+
+            break;
+
         case 'catalogue:recount':
             $container->get(BookRepository::class)->refreshCounters();
             out('Category and tag counters recalculated.');
@@ -413,6 +446,7 @@ try {
             out('  db:create          create the configured database if it does not exist');
             out('  db:seed            add the public domain seed books, skipping any already there');
             out('  catalogue:recount  recalculate the category and tag book counters');
+            out('  search:reindex     re-read the text inside every published PDF and TXT');
             out('  key:generate       write a new APP_KEY into .env');
             out('  user:promote <email> <role>  set a role: member, librarian or admin');
             out('  user:list          list the first 50 accounts');

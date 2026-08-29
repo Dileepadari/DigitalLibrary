@@ -81,6 +81,16 @@ final class BookFileRepository
         );
     }
 
+    /** As storeText(), but starting from the file rather than the book. */
+    public function storeTextForFile(int $fileId, string $content): void
+    {
+        $bookId = $this->db->scalar('SELECT book_id FROM book_files WHERE id = ?', [$fileId]);
+
+        if ($bookId !== null) {
+            $this->storeText((int) $bookId, $content);
+        }
+    }
+
     /** The extracted text feeds the FULLTEXT index on book_texts. */
     public function storeText(int $bookId, string $content): void
     {

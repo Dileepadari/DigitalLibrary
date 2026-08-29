@@ -31,7 +31,7 @@ $this->end();
 
             <div class="field">
                 <label for="statement">Why you, and what you would work on</label>
-                <textarea id="statement" name="statement" rows="6" required maxlength="2000"><?=
+                <textarea id="statement" name="statement"<?= $this->errorAttributes('statement') ?> rows="6" required maxlength="2000"><?=
                     $this->e($this->old('statement'))
                 ?></textarea>
                 <p class="field__hint">

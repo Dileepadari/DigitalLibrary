@@ -30,7 +30,7 @@ $link = static fn (array $extra): string => '/requests?' . http_build_query(arra
                 <div class="field-row">
                     <div class="field">
                         <label for="title">Title</label>
-                        <input type="text" id="title" name="title" required maxlength="255"
+                        <input type="text" id="title" name="title"<?= $this->errorAttributes('title') ?> required maxlength="255"
                                value="<?= $this->e($this->old('title')) ?>">
                         <?php $this->include('partials/field-errors', ['field' => 'title']) ?>
                     </div>

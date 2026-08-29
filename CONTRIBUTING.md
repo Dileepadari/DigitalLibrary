@@ -180,6 +180,34 @@ out visitors are redirected to `/login` with the path remembered, so they land
 back where they were going. For a page that only makes sense signed out, use
 `RedirectIfAuthenticated`.
 
+## Adding a translated string
+
+The key is the English string itself, so the first step is to wrap it:
+
+```php
+<?php echo $this->t('Waiting for review'); ?>
+```
+
+That alone is a complete change: an untranslated key renders as the English it
+already was. To translate it, add the same string as a key in
+`resources/lang/hi.php`. Keep the two files in the same order so a missing line
+is visible in a diff. Placeholders are `:name` and are filled from the second
+argument.
+
+Do not wrap catalogue content: a book's title, its description and a member's
+review are shown as they were written. Translate the interface around them.
+
+Adding a whole language is one file, `resources/lang/<two letters>.php`; the
+footer switcher lists whatever it finds, so there is nothing else to register.
+
+## Adding an API route
+
+`routes/api.php` only. Everything in there is public, read-only and rate
+limited, and it must stay that way: if a route needs to know who is calling, it
+belongs in `routes/web.php` instead. Return through `Response::json()`, reuse
+the repository the HTML page uses rather than writing a second query, and give
+the route a `RateLimit` middleware with a limit that suits how expensive it is.
+
 ## What to work on
 
 Issues labelled `good first issue` are scoped to a single file or a single

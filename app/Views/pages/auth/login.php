@@ -15,14 +15,14 @@ $this->end();
 
         <div class="field">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="<?= $this->e($this->old('email')) ?>"
+            <input type="email" id="email" name="email"<?= $this->errorAttributes('email') ?> value="<?= $this->e($this->old('email')) ?>"
                    autocomplete="email" required autofocus>
             <?php $this->include('partials/field-errors', ['field' => 'email']) ?>
         </div>
 
         <div class="field">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" autocomplete="current-password" required>
+            <input type="password" id="password" name="password"<?= $this->errorAttributes('password') ?> autocomplete="current-password" required>
             <?php $this->include('partials/field-errors', ['field' => 'password']) ?>
         </div>
 

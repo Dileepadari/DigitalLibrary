@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\Config;
-use App\Core\Logger;
 use App\Core\Storage;
 use App\Models\Book;
 use App\Models\User;
@@ -13,7 +12,6 @@ use App\Repositories\BookFileRepository;
 use App\Repositories\BookRepository;
 use App\Repositories\SettingsRepository;
 use App\Support\UploadResult;
-use Smalot\PdfParser\Parser as PdfParser;
 
 /**
  * Everything between "someone chose a file" and "a reviewer can look at it",
@@ -49,9 +47,9 @@ final class UploadPipeline
         private readonly BookFileRepository $files,
         private readonly BookRepository $books,
         private readonly CoverGenerator $covers,
+        private readonly TextExtractor $extractor,
         private readonly Config $config,
         private readonly SettingsRepository $settings,
-        private readonly Logger $logger,
     ) {
     }
 
@@ -238,37 +236,7 @@ final class UploadPipeline
      */
     private function inspect(string $path, string $extension): array
     {
-        $result = ['pages' => null, 'text' => null, 'warnings' => []];
-
-        if ($extension === 'txt') {
-            $result['text'] = mb_substr((string) file_get_contents($path), 0, 60000);
-
-            return $result;
-        }
-
-        if ($extension !== 'pdf' || !class_exists(PdfParser::class)) {
-            if ($extension === 'pdf') {
-                $result['warnings'][] = 'Page count not read: smalot/pdfparser is not installed.';
-            }
-
-            return $result;
-        }
-
-        try {
-            $pdf = (new PdfParser())->parseFile($path);
-            $result['pages'] = count($pdf->getPages());
-            $result['text'] = mb_substr(trim($pdf->getText()), 0, 60000);
-
-            if ($result['text'] === '') {
-                $result['warnings'][] = 'No text layer: this looks like a scan, so it will not be searchable.';
-                $result['text'] = null;
-            }
-        } catch (\Throwable $e) {
-            $this->logger->warning('Could not parse an uploaded PDF', ['error' => $e->getMessage()]);
-            $result['warnings'][] = 'The PDF could not be parsed, so there is no page count.';
-        }
-
-        return $result;
+        return $this->extractor->fromFile($path, $extension);
     }
 
     private function humanSize(int $bytes): string

@@ -46,7 +46,7 @@ $this->end();
 
         <div class="reader__controls">
             <button type="button" class="button button--small button--quiet" data-reader-prev>Previous</button>
-            <span class="reader__where" data-reader-where>&nbsp;</span>
+            <span class="reader__where" data-reader-where role="status" aria-live="polite">&nbsp;</span>
             <button type="button" class="button button--small button--quiet" data-reader-next>Next</button>
         </div>
 

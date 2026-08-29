@@ -23,22 +23,19 @@ $check = static fn (bool $ok): string => $ok
     <h1><?= $this->e($siteName) ?></h1>
     <p class="hero__tagline"><?= $this->e($this->config('app.tagline')) ?></p>
     <p class="hero__note">
-        Milestones 0 to 6 are in place: the application core, accounts with roles
-        and permissions, the catalogue, uploads with the review queue behind them,
-        book requests, collections, and reading in the browser. See PLAN.md for
-        what comes next.
+        <?= $this->e($this->t('Search the catalogue, read in the browser, ask for a book nobody has added yet, and upload the ones you have. Everything a member adds is reviewed by a librarian before it goes in.')) ?>
     </p>
 
     <?php if (!$this->auth->check()) : ?>
         <p class="hero__actions">
-            <a class="button" href="<?= $this->url('register') ?>">Create an account</a>
-            <a class="button button--quiet" href="<?= $this->url('login') ?>">Sign in</a>
+            <a class="button" href="<?= $this->url('register') ?>"><?= $this->e($this->t('Create an account')) ?></a>
+            <a class="button button--quiet" href="<?= $this->url('login') ?>"><?= $this->e($this->t('Sign in')) ?></a>
         </p>
     <?php else : ?>
         <p class="hero__actions">
-            <a class="button" href="<?= $this->url('books') ?>">Browse the library</a>
+            <a class="button" href="<?= $this->url('books') ?>"><?= $this->e($this->t('Browse the library')) ?></a>
             <?php if ($this->gate->allows('book.upload')) : ?>
-                <a class="button button--quiet" href="<?= $this->url('books.new') ?>">Add a book</a>
+                <a class="button button--quiet" href="<?= $this->url('books.new') ?>"><?= $this->e($this->t('Add a book')) ?></a>
             <?php endif ?>
         </p>
         <p class="hero__note">

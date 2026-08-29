@@ -26,6 +26,7 @@ final class View
         private readonly Router $router,
         private readonly Config $config,
         private readonly ?Session $session = null,
+        private readonly ?Translator $translator = null,
     ) {
     }
 
@@ -59,6 +60,28 @@ final class View
         $messages = array_values($errors[$field]);
 
         return $messages;
+    }
+
+    /**
+     * The attributes an input needs when its value was rejected: the state, and
+     * a pointer at the message. Echoed unescaped because it is markup, and it
+     * is built here from a field name the template chose.
+     */
+    public function errorAttributes(string $field): string
+    {
+        if ($this->errors($field) === []) {
+            return '';
+        }
+
+        return ' aria-invalid="true" aria-describedby="' . $this->errorId($field) . '"';
+    }
+
+    /** The id of a field's first error message, shared by the input and the message. */
+    public function errorId(string $field): string
+    {
+        $id = preg_replace('/[^a-zA-Z0-9_-]/', '', $field);
+
+        return ($id === null || $id === '' ? 'field' : $id) . '-error';
     }
 
     public function hasError(string $field): bool
@@ -160,6 +183,22 @@ final class View
         $file = BASE_PATH . '/public' . $path;
 
         return is_file($file) ? $path . '?v=' . filemtime($file) : $path;
+    }
+
+    /**
+     * A translated interface string. The key is the English, so an untranslated
+     * template still reads correctly.
+     *
+     * @param array<string, string|int> $replacements
+     */
+    public function t(string $key, array $replacements = []): string
+    {
+        return $this->translator?->get($key, $replacements) ?? $key;
+    }
+
+    public function locale(): string
+    {
+        return $this->translator?->locale() ?? 'en';
     }
 
     public function config(string $key, mixed $default = null): mixed
