@@ -41,22 +41,41 @@ final class CoverGenerator
     ) {
     }
 
-    /** Which renderer this host can use, or null when it cannot make covers. */
-    public function renderer(): ?string
+    /**
+     * Every renderer this host could use, best first.
+     *
+     * Presence is not ability: Imagick delegates PDF rasterising to Ghostscript
+     * and many distributions ship one without the other, or ship an ImageMagick
+     * policy.xml that refuses the PDF coder outright. Such a host reports
+     * Imagick, renders nothing, and the failure looks like a bug in this class.
+     * So the list is a list, and `fromPdf` tries the next one when a renderer
+     * returns nothing.
+     *
+     * @return list<string>
+     */
+    public function renderers(): array
     {
+        $available = [];
+
         if (extension_loaded('imagick') && class_exists(\Imagick::class)) {
-            return 'imagick';
+            $available[] = 'imagick';
         }
 
         if ($this->binary('pdftoppm') !== null) {
-            return 'pdftoppm';
+            $available[] = 'pdftoppm';
         }
 
         if ($this->binary('gs') !== null) {
-            return 'ghostscript';
+            $available[] = 'ghostscript';
         }
 
-        return null;
+        return $available;
+    }
+
+    /** The renderer that would be tried first, or null when there is none. */
+    public function renderer(): ?string
+    {
+        return $this->renderers()[0] ?? null;
     }
 
     public function available(): bool
@@ -83,12 +102,27 @@ final class CoverGenerator
         }
 
         try {
-            $rendered = match ($this->renderer()) {
-                'imagick'     => $this->withImagick($absolutePath, $temporary),
-                'pdftoppm'    => $this->withPdftoppm($absolutePath, $temporary),
-                'ghostscript' => $this->withGhostscript($absolutePath, $temporary),
-                default       => false,
-            };
+            $rendered = false;
+
+            foreach ($this->renderers() as $renderer) {
+                $rendered = match ($renderer) {
+                    'imagick'     => $this->withImagick($absolutePath, $temporary),
+                    'pdftoppm'    => $this->withPdftoppm($absolutePath, $temporary),
+                    'ghostscript' => $this->withGhostscript($absolutePath, $temporary),
+                    default       => false,
+                };
+
+                if ($rendered && $this->isImage($temporary)) {
+                    break;
+                }
+
+                // Leave nothing behind for the next renderer to mistake for output.
+                $rendered = false;
+
+                if (is_file($temporary)) {
+                    file_put_contents($temporary, '');
+                }
+            }
 
             if (!$rendered || !$this->isImage($temporary)) {
                 return null;
@@ -102,8 +136,8 @@ final class CoverGenerator
             return $relative;
         } catch (\Throwable $e) {
             $this->logger->warning('Could not render a cover', [
-                'error'    => $e->getMessage(),
-                'renderer' => $this->renderer(),
+                'error'      => $e->getMessage(),
+                'renderers'  => $this->renderers(),
             ]);
 
             return null;
