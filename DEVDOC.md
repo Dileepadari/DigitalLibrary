@@ -629,6 +629,14 @@ because a picture could not be made of it, and the book page falls back to the
 tinted letter it used before. `covers:generate` says which renderer is in use and
 backfills the records that have none.
 
+Because it is a system package rather than a Composer requirement, nothing
+enforces it, and that has bitten twice: the shipped `Dockerfile` installed no
+renderer at all, so the official image silently never made a cover, and CI
+installed none either, so the five cover tests depended on whatever the runner
+image happened to ship and failed on `main`. Both now install `poppler-utils`
+explicitly. **If you deploy anywhere else, install one of the three yourself**,
+and remember the failure is silent by design.
+
 The renderers are run with every argument escaped and, where `timeout` exists, a
 20 second limit: a malformed PDF can send a rasteriser into a very long loop. The
 only paths that reach the command line are ours (a hash under `storage/` and a

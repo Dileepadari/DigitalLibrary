@@ -27,6 +27,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # CoverGenerator rasterises page one of a PDF using whichever tool the host
+      # has. Left undeclared, CI used whatever the runner image happened to ship,
+      # which is how five cover tests failed here while passing on every
+      # developer machine. Installing the preferred renderer makes it explicit.
+      - name: Install a PDF renderer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends poppler-utils
+
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
@@ -73,6 +82,14 @@ jobs:
 
       # The database tests only run when DB_DATABASE names a test database,
       # which the step above arranged.
+      # Says which renderer CoverGenerator will pick, so a cover failure
+      # explains itself instead of looking like a logic bug. Read-only.
+      - name: Report the PDF renderer in use
+        run: |
+          php -r 'echo "imagick: ", extension_loaded("imagick") ? "yes" : "no", PHP_EOL;'
+          echo "pdftoppm: $(command -v pdftoppm || echo none)"
+          echo "gs:       $(command -v gs || echo none)"
+
       - run: composer test
 
       - name: Health check reports a working install

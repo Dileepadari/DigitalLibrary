@@ -2,8 +2,12 @@
 # same shape as the shared hosting most self-hosters will use.
 FROM php:8.3-apache
 
+# poppler-utils is not a build dependency: it is what CoverGenerator shells out
+# to for page one of a PDF. Without it the image runs fine and silently never
+# makes a cover, which is the documented fallback but a poor default to ship.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libzip-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev unzip \
+        poppler-utils \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" pdo_mysql gd zip opcache \
     && a2enmod rewrite headers \
