@@ -129,11 +129,21 @@ final class BookFileRepository
      */
     public function pdfsWithoutCover(int $limit = 200): array
     {
+        // One row per book, and specifically the earliest PDF, chosen by a
+        // correlated MIN(id) rather than GROUP BY. `GROUP BY f.book_id` while
+        // selecting f.storage_path and f.sha256 is rejected outright by MySQL's
+        // default sql_mode (only_full_group_by), so the backfill command failed
+        // on any stock MySQL 8. It also left which file you got undefined.
         $rows = $this->db->select(
             "SELECT f.book_id, f.storage_path, f.sha256 FROM book_files f
              INNER JOIN books b ON b.id = f.book_id
-             WHERE f.format = 'pdf' AND b.cover_path IS NULL AND b.deleted_at IS NULL
-             GROUP BY f.book_id
+             WHERE f.format = 'pdf'
+               AND b.cover_path IS NULL
+               AND b.deleted_at IS NULL
+               AND f.id = (
+                   SELECT MIN(f2.id) FROM book_files f2
+                   WHERE f2.book_id = f.book_id AND f2.format = 'pdf'
+               )
              ORDER BY f.book_id LIMIT ?",
             [max(1, min(1000, $limit))]
         );

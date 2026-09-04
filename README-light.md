@@ -1,3 +1,5 @@
+<!-- Generated from README.md by scripts/build-light-readme.php. Do not edit by hand. -->
+
 <div align="center">
 
 <picture>
@@ -22,7 +24,7 @@
 
 **[Developer documentation](./DEVDOC.md)** · [Screenshots](#screenshots) · [Getting started](#getting-started)
 
-<p><b>Dark mode</b> · <a href="./README-light.md">View this page in light mode</a></p>
+<p><b>Light mode</b> · <a href="./README.md">View this page in dark mode</a></p>
 
 </div>
 
@@ -70,34 +72,34 @@ identical file icons is not a library.
 
 ## Screenshots
 
-Every image is a real 1440x900 viewport render against the seeded catalogue. This page shows **dark mode**; the same gallery in light mode is at **[README-light.md](./README-light.md)**.
+Every image is a real 1440x900 viewport render against the seeded catalogue. This page shows **light mode**; the same gallery in dark mode is at **[README.md](./README.md)**.
 
 <table>
   <tr>
     <td width="33%" valign="top">
-      <img src="./docs/screenshots/dark/01-browse.png" alt="Browse page with the category tree, filters and book cards" loading="lazy">
+      <img src="./docs/screenshots/light/01-browse.png" alt="Browse page with the category tree, filters and book cards" loading="lazy">
       <p align="center"><b>Browse</b><br><sub>The category tree, four filters, and the catalogue.</sub></p>
     </td>
     <td width="33%" valign="top">
-      <img src="./docs/screenshots/dark/02-book.png" alt="A book page with description, details panel and reviews" loading="lazy">
+      <img src="./docs/screenshots/light/02-book.png" alt="A book page with description, details panel and reviews" loading="lazy">
       <p align="center"><b>A book</b><br><sub>Description, the details panel, reviews and ratings.</sub></p>
     </td>
     <td width="33%" valign="top">
-      <img src="./docs/screenshots/dark/06-search.png" alt="Search results narrowed to one book, with the query shown as a removable chip" loading="lazy">
+      <img src="./docs/screenshots/light/06-search.png" alt="Search results narrowed to one book, with the query shown as a removable chip" loading="lazy">
       <p align="center"><b>Search</b><br><sub>Titles, authors and the text inside PDFs.</sub></p>
     </td>
   </tr>
   <tr>
     <td width="33%" valign="top">
-      <img src="./docs/screenshots/dark/03-categories.png" alt="The category tree with per-category book counts" loading="lazy">
+      <img src="./docs/screenshots/light/03-categories.png" alt="The category tree with per-category book counts" loading="lazy">
       <p align="center"><b>Categories</b><br><sub>The fixed shelf structure, curated by librarians.</sub></p>
     </td>
     <td width="33%" valign="top">
-      <img src="./docs/screenshots/dark/04-add-book.png" alt="The add a book form with metadata fields" loading="lazy">
+      <img src="./docs/screenshots/light/04-add-book.png" alt="The add a book form with metadata fields" loading="lazy">
       <p align="center"><b>Add a book</b><br><sub>Metadata first; the file goes to the review queue.</sub></p>
     </td>
     <td width="33%" valign="top">
-      <img src="./docs/screenshots/dark/05-admin.png" alt="Admin dashboard with counts, 30 day activity and the review queue" loading="lazy">
+      <img src="./docs/screenshots/light/05-admin.png" alt="Admin dashboard with counts, 30 day activity and the review queue" loading="lazy">
       <p align="center"><b>Admin</b><br><sub>Counts, 30 day activity, and how the queue is doing.</sub></p>
     </td>
   </tr>
@@ -110,15 +112,15 @@ Each image is a single render at that exact viewport, not a scaled-down desktop 
 <table>
   <tr>
     <td width="28%" valign="top">
-      <img src="./docs/screenshots/responsive/dark/mobile-browse.png" alt="Browse on a 390x844 phone viewport" loading="lazy">
+      <img src="./docs/screenshots/responsive/light/mobile-browse.png" alt="Browse on a 390x844 phone viewport" loading="lazy">
       <p align="center"><b>Phone, 390x844</b><br><sub>Filters stack; the category tree moves below.</sub></p>
     </td>
     <td width="28%" valign="top">
-      <img src="./docs/screenshots/responsive/dark/mobile-book.png" alt="A book page on a 390x844 phone viewport" loading="lazy">
+      <img src="./docs/screenshots/responsive/light/mobile-book.png" alt="A book page on a 390x844 phone viewport" loading="lazy">
       <p align="center"><b>Phone, a book</b><br><sub>Cover, then title, then everything in one column.</sub></p>
     </td>
     <td width="44%" valign="top">
-      <img src="./docs/screenshots/responsive/dark/tablet-admin.png" alt="Admin dashboard on an 820x950 tablet viewport" loading="lazy">
+      <img src="./docs/screenshots/responsive/light/tablet-admin.png" alt="Admin dashboard on an 820x950 tablet viewport" loading="lazy">
       <p align="center"><b>Tablet, 820x950</b><br><sub>Stat cards reflow from four columns to three.</sub></p>
     </td>
   </tr>
