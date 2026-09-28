@@ -17,7 +17,7 @@
             <li>
                 <strong><?= $this->e((string) ($event['actor_name'] ?? 'someone')) ?></strong>
                 <?= $this->e((string) ($event['from_status'] ?? 'new')) ?>
-                &rarr; <?= $this->e((string) $event['to_status']) ?>
+                &gt; <?= $this->e((string) $event['to_status']) ?>
                 <?php if (($event['note'] ?? null) !== null) : ?>
                     <span class="status-item__detail"><?= $this->e((string) $event['note']) ?></span>
                 <?php endif ?>

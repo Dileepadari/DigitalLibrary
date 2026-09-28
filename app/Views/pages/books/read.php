@@ -32,7 +32,7 @@ $this->end();
 
     <header class="reader__bar">
         <div class="reader__title">
-            <a href="<?= $this->url('book', ['slug' => $book->slug]) ?>">&larr; <?= $this->e($book->title) ?></a>
+            <a href="<?= $this->url('book', ['slug' => $book->slug]) ?>">&lt; <?= $this->e($book->title) ?></a>
             <span class="status-item__detail">
                 <?= $this->e(strtoupper($file->format)) ?>
                 <?php if ($file->pageCount !== null) : ?>
