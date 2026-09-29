@@ -103,6 +103,7 @@ try {
             $authors = $container->get(AuthorRepository::class);
             $categories = $container->get(CategoryRepository::class);
             $tags = $container->get(TagRepository::class);
+            $storage = $container->get(Storage::class);
             $added = 0;
             $skipped = 0;
 
@@ -146,6 +147,20 @@ try {
 
                 $books->syncCategories($id, $categoryIds);
                 $books->syncTags($id, $tags->resolveMany((array) ($seed['tags'] ?? []), null, true));
+
+                // A seeded shelf with no covers reads as a broken feature rather
+                // than an empty one. These are stored the same way a generated
+                // cover is - hashed and sharded under covers/ - so nothing later
+                // has to know where a cover came from.
+                $cover = isset($seed['cover'])
+                    ? BASE_PATH . '/database/seeds/covers/' . $seed['cover']
+                    : null;
+
+                if ($cover !== null && is_file($cover)) {
+                    $relative = 'covers/' . $storage->shardedName($storage->hash($cover), 'jpg');
+                    $storage->put($relative, $cover);
+                    $books->update($id, ['cover_path' => $relative]);
+                }
 
                 out('  added  ' . $seed['title']);
                 $added++;
