@@ -1499,14 +1499,26 @@ same report as JSON, with 200 when everything is ready and 503 when it is not.
 ### With Docker
 
 ```bash
-docker compose up --build           # app on http://localhost:8000, MySQL on 3307
-docker compose exec app php cli/console.php migrate
-docker compose --profile tools up adminer   # optional, on :8080
+docker compose up --build                        # app on http://localhost:8000, MySQL on 3307
+docker compose exec -u www-data app php cli/console.php migrate
+docker compose exec -u www-data app php cli/console.php db:seed
+docker compose --profile tools up adminer        # optional, on :8080
 ```
 
 The checkout is bind-mounted so edits are live, but `storage/` is a named volume
 so uploads survive a rebuild and Apache's `www-data` never writes into your
 working copy.
+
+**Run the console as `www-data`, not as root.** `docker compose exec` defaults to
+root, and anything the console writes into `storage/` - a seeded cover, a
+generated one, an uploaded file - is then owned by root with mode 0640. Apache
+runs as `www-data` and cannot read it, so every cover 404s and the shelf looks
+like a broken feature rather than a permissions mistake. If it has already
+happened:
+
+```bash
+docker compose exec -u root app chown -R www-data:www-data storage
+```
 
 ## Deployment
 

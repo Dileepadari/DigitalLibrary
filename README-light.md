@@ -72,7 +72,7 @@ identical file icons is not a library.
 
 ## Screenshots
 
-Every image is a real 1440x900 viewport render against the seeded catalogue. This page shows **light mode**; the same gallery in dark mode is at **[README.md](./README.md)**.
+Every image is a real 1920x1027 desktop viewport render against the seeded catalogue, covers included. This page shows **light mode**; the same gallery in dark mode is at **[README.md](./README.md)**.
 
 <table>
   <tr>

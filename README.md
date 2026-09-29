@@ -70,7 +70,7 @@ identical file icons is not a library.
 
 ## Screenshots
 
-Every image is a real 1440x900 viewport render against the seeded catalogue. This page shows **dark mode**; the same gallery in light mode is at **[README-light.md](./README-light.md)**.
+Every image is a real 1920x1027 desktop viewport render against the seeded catalogue, covers included. This page shows **dark mode**; the same gallery in light mode is at **[README-light.md](./README-light.md)**.
 
 <table>
   <tr>
@@ -250,7 +250,16 @@ Imagick, `pdftoppm` (poppler-utils) or Ghostscript, in that order, and a host wi
 none of them silently makes no covers. The Docker image installs poppler-utils for
 you; anywhere else it is on you.
 
-Then register through the sign-up form and promote yourself:
+Then register through the sign-up form - the first account becomes the
+administrator - and seed the public domain catalogue:
+
+```bash
+docker compose exec -u www-data app php cli/console.php db:seed
+```
+
+Run the console as `www-data`. `docker compose exec` is root by default, and
+files it writes into `storage/` are then unreadable by Apache, which shows up as
+covers that 404 rather than as a permissions error. To promote a later account:
 
 ```bash
 php cli/console.php user:promote you@example.com admin
