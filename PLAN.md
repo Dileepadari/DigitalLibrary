@@ -409,7 +409,12 @@ MVP line: M0 through M4 is a usable library with the three roles and the approva
 
 ## 13. Open source setup
 
-- Licence: **AGPL-3.0-or-later**, decided at M0 and shipped in `LICENSE`. Anyone running a modified public instance has to publish their changes. Relicensing later needs every contributor to agree, so this is settled.
+- Licence: **MIT**, shipped in `LICENSE`. This was AGPL-3.0-or-later at M0, on the reasoning that anyone
+  running a modified public instance should have to publish their changes. Changed to MIT on 2026-09-30:
+  the point of this is to be picked up and run by a hostel, a department or a small library, and a copyleft
+  obligation on a self-hosted instance is friction those people should not have to read about. Relicensing
+  was clean because every commit is by one author. The seeded catalogue is separate and always was: those
+  books are public domain, and nothing here claims anything over what you upload to your own instance.
 - `CONTRIBUTING.md`: local setup in under five commands, coding standard (PSR-12, PHPStan level 6), commit style, how to add a migration, how to add a permission.
 - `CODE_OF_CONDUCT.md`: Contributor Covenant 2.1.
 - Issue and PR templates, labels including `good first issue` and `help wanted`, and a starter set of scoped issues carved out of M2 and M7.
@@ -440,7 +445,8 @@ MVP line: M0 through M4 is a usable library with the three roles and the approva
 2. Whether reputation can ever auto-approve an upload without a human, and at what threshold.
 3. Instance federation (one library discovering another's catalogue over OPDS) - interesting, deliberately out of scope for v1.
 
-Settled at M0: the licence (AGPL-3.0-or-later) and the default mail transport
+Settled at M0: the licence (AGPL-3.0-or-later, changed to MIT on 2026-09-30, see section 13) and the
+default mail transport
 (`MAIL_DRIVER=log`, which writes messages to `storage/logs` so a fresh install
 needs no SMTP credentials).
 

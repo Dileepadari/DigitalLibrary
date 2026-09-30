@@ -2,7 +2,7 @@
     "name": "adkdev/digital-library",
     "description": "An open source digital library with member, librarian and admin roles and a review queue for everything members contribute.",
     "type": "project",
-    "license": "AGPL-3.0-or-later",
+    "license": "MIT",
     "require": {
         "php": ">=8.2",
         "ext-fileinfo": "*",

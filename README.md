@@ -301,4 +301,11 @@ messages to a single line.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT for the software. See [LICENSE](./LICENSE).
+
+The catalogue that ships with it is not the software. The 13 seeded books are
+public domain, out of copyright and linked back to Project Gutenberg or the
+Internet Archive through each record's `source_url`; their covers are typeset
+here rather than scanned, so no publisher's jacket is redistributed. Anything
+you upload to your own instance stays under whatever licence it already had:
+this project claims nothing over it.

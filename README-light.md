@@ -252,7 +252,16 @@ Imagick, `pdftoppm` (poppler-utils) or Ghostscript, in that order, and a host wi
 none of them silently makes no covers. The Docker image installs poppler-utils for
 you; anywhere else it is on you.
 
-Then register through the sign-up form and promote yourself:
+Then register through the sign-up form - the first account becomes the
+administrator - and seed the public domain catalogue:
+
+```bash
+docker compose exec -u www-data app php cli/console.php db:seed
+```
+
+Run the console as `www-data`. `docker compose exec` is root by default, and
+files it writes into `storage/` are then unreadable by Apache, which shows up as
+covers that 404 rather than as a permissions error. To promote a later account:
 
 ```bash
 php cli/console.php user:promote you@example.com admin
@@ -294,4 +303,11 @@ messages to a single line.
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT for the software. See [LICENSE](./LICENSE).
+
+The catalogue that ships with it is not the software. The 13 seeded books are
+public domain, out of copyright and linked back to Project Gutenberg or the
+Internet Archive through each record's `source_url`; their covers are typeset
+here rather than scanned, so no publisher's jacket is redistributed. Anything
+you upload to your own instance stays under whatever licence it already had:
+this project claims nothing over it.
